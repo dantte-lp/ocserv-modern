@@ -417,7 +417,8 @@ See `/opt/projects/repositories/ocserv-modern/docs/agile/USER_STORIES.md` for fu
 
 - **TLS Abstraction API**: ../../src/crypto/tls_abstract.h
 - **GnuTLS Manual**: https://gnutls.org/manual/
-- **wolfSSL Manual**: https://www.wolfssl.com/documentation/manuals/
+- **wolfSSL Manual**: https://www.wolfssl.com/documentation/manuals/wolfssl/index.html
+- **wolfSSL Examples**: https://github.com/wolfSSL/wolfssl-examples
 - **User Stories**: ../../docs/agile/USER_STORIES.md
 - **API Audit**: ../../docs/architecture/GNUTLS_API_AUDIT.md
 - **Sprint Progress**: ../../docs/SPRINT0_PROGRESS.md

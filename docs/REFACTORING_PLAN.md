@@ -1307,7 +1307,12 @@ The original optimistic timeline (34 weeks) and performance claims (2x improveme
 
 1. ocserv-refactoring-plan-wolfssl-native.md (original plan)
 2. ocserv-refactoring-plan-wolfssl-native_v2.md (critical analysis)
-3. wolfSSL Documentation: https://www.wolfssl.com/docs/
+3. wolfSSL Documentation:
+   - Manual: https://www.wolfssl.com/documentation/manuals/wolfssl/index.html
+   - Tuning Guide: https://www.wolfssl.com/documentation/manuals/wolfssl-tuning-guide/index.html
+   - Examples: https://github.com/wolfSSL/wolfssl-examples
+   - Hardware Crypto: https://wolfssl.com/docs/hardware-crypto-support/
+   - Ecosystem Guide: docs/architecture/WOLFSSL_ECOSYSTEM.md
 4. RFC 8446: TLS 1.3
 5. RFC 9147: DTLS 1.3
 

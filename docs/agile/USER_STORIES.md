@@ -874,6 +874,254 @@ Focus: Core integration
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-10-29
+## wolfSSL Ecosystem Integration Stories
+
+### US-042: wolfSentry IDPS Integration
+
+**Story**: As a VPN administrator, I want rate limiting and connection tracking so that I can prevent brute-force attacks and DoS attempts.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 5-6
+**Story Points**: 13
+**Risk**: MEDIUM
+
+**Description**:
+Integrate wolfSentry v1.6.3 (embedded IDPS/firewall engine) to provide:
+- Per-IP connection rate limiting
+- Brute-force attack prevention
+- Geographic/subnet-based filtering
+- Per-user connection limits
+
+**Acceptance Criteria**:
+- [ ] wolfSentry library integrated and builds correctly
+- [ ] Rate limiting active for connection attempts (max 5/minute configurable)
+- [ ] IP blacklisting automatic after threshold violations
+- [ ] Per-user connection limits enforced (fixes upstream issue #372)
+- [ ] Geographic filtering via prefix-based rules
+- [ ] DTLS DoS protection (rate limit handshake floods)
+- [ ] Runtime rule modification without server restart
+- [ ] Statistics API for monitoring (blocked IPs, rate limits hit)
+- [ ] Configuration via ocserv.conf (rate_limit_enabled = true)
+- [ ] Log security events (connection blocked, IP blacklisted)
+- [ ] Performance impact <10% overhead
+- [ ] Integration tests with simulated attacks
+
+**Dependencies**:
+- US-005: wolfSSL Backend Skeleton
+- US-018: Worker Process Integration
+
+**Technical Notes**:
+```c
+// Integration points
+1. Pre-authentication: wolfsentry_check_ip() before TLS handshake
+2. Post-authentication: wolfsentry_track_user_session()
+3. Disconnect: wolfsentry_release_session()
+4. DTLS: wolfsentry_check_udp_rate() for handshake floods
+```
+
+**Files to Modify**:
+- `src/security/wolfsentry_integration.c` (NEW)
+- `src/security/wolfsentry_integration.h` (NEW)
+- `src/worker-vpn.c` (add pre-auth checks)
+- `src/config.c` (rate_limit_* config options)
+
+**Testing**:
+- Unit tests: Rule insertion, IP matching, rate calculation
+- Integration tests: Simulated brute-force (fail after 5 attempts)
+- Load tests: 1000 conn/sec with rate limits active
+- Security tests: Verify bypass attempts blocked
+
+**Reference**:
+- docs/architecture/WOLFSSL_ECOSYSTEM.md (wolfSentry section)
+- https://wolfssl.com/documentation/manuals/wolfsentry/
+
+**Solves Upstream Issues**:
+- #372: Max-same-clients per user not working
+- DoS protection (general)
+
+---
+
+### US-043: wolfPKCS11 HSM Support
+
+**Story**: As an enterprise security officer, I want server private keys stored in HSM so that keys never exist in RAM/disk and compliance requirements are met.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 8-9
+**Story Points**: 21
+**Risk**: HIGH (Complex, critical for enterprise)
+
+**Description**:
+Integrate wolfPKCS11 for Hardware Security Module (HSM) and smart card support:
+- Load server private keys from HSM (keys never in RAM)
+- Support client authentication via smart cards (CAC/PIV)
+- FIPS 140-2/140-3 Level 2+ compliance
+- Key generation and rotation in hardware
+
+**Acceptance Criteria**:
+- [ ] wolfPKCS11 library integrated and builds correctly
+- [ ] Server private key loading from HSM (SoftHSM for testing)
+- [ ] PKCS#11 URI support (`pkcs11:token=VPN;object=server-key`)
+- [ ] Smart card client authentication (PIV/CAC compatible)
+- [ ] Support for multiple HSM vendors (via PKCS#11 standard)
+- [ ] Configuration migration from GnuTLS PKCS#11
+- [ ] HSM operations properly logged (audit trail)
+- [ ] Key ceremony documentation (key generation in HSM)
+- [ ] Fallback to file-based keys if HSM unavailable
+- [ ] PIN/passphrase protection for HSM access
+- [ ] Integration tests with SoftHSM2
+- [ ] Documentation for HSM deployment
+
+**Dependencies**:
+- US-005: wolfSSL Backend Skeleton (CRITICAL)
+- US-012: Certificate Management (REQUIRED)
+- US-023: PKCS#11 Integration (placeholder, now full implementation)
+
+**Technical Notes**:
+```c
+// HSM private key loading
+int load_server_key_from_hsm(WOLFSSL_CTX *ctx) {
+    Pkcs11Dev dev;
+    Pkcs11Token token;
+
+    wc_Pkcs11_Initialize(&dev, "/usr/lib/softhsm/libsofthsm2.so", NULL);
+    wc_Pkcs11Token_Init(&token, &dev, slot_id, label, pin, pin_len);
+
+    // Key stays in HSM, never in RAM!
+    wolfSSL_CTX_use_PrivateKey_Id(ctx, key_id, key_id_len, &token);
+}
+```
+
+**Files to Create**:
+- `src/crypto/pkcs11_wolfssl.c` (NEW)
+- `src/crypto/pkcs11_wolfssl.h` (NEW)
+- `src/crypto/pkcs11_abstract.h` (backend abstraction)
+
+**Files to Modify**:
+- `src/crypto/tls_wolfssl.c` (add PKCS#11 support)
+- `src/config.c` (pkcs11_* config options)
+- `docs/deployment/HSM_DEPLOYMENT.md` (NEW)
+
+**Testing**:
+- Unit tests: PKCS#11 initialization, key loading
+- Integration tests: Full TLS handshake with HSM key
+- Compatibility tests: Different HSM vendors (SoftHSM, YubiHSM, etc.)
+- Security tests: Verify key never in memory dumps
+- Performance tests: Handshake latency with HSM operations
+
+**Migration from GnuTLS PKCS#11**:
+```c
+// Abstraction layer for compatibility
+pkcs11_backend_t backend = IS_WOLFSSL ?
+    &wolfssl_pkcs11_backend : &gnutls_pkcs11_backend;
+backend->load_key(ctx, "pkcs11:token=VPN;object=server-key");
+```
+
+**Reference**:
+- docs/architecture/WOLFSSL_ECOSYSTEM.md (wolfPKCS11 section)
+- https://github.com/wolfSSL/wolfPKCS11
+- PKCS#11 v2.40 specification
+
+**Addresses Critical Risks**:
+- High-risk item from GNUTLS_API_AUDIT.md
+- Enterprise/government deployment requirement
+- FIPS compliance enabler
+
+---
+
+### US-044: wolfCLU Testing Tools Integration
+
+**Story**: As a developer, I want wolfCLU command-line tools integrated in build system so that certificate generation and testing are automated.
+
+**Priority**: P2 (MEDIUM)
+**Sprint**: Sprint 11
+**Story Points**: 5
+**Risk**: LOW
+
+**Description**:
+Integrate wolfCLU v0.1.8 command-line utilities for:
+- Automated test certificate generation
+- Build system integration (Makefile targets)
+- CI/CD certificate management
+- Debugging and validation tools
+
+**Acceptance Criteria**:
+- [ ] wolfCLU installed in development containers
+- [ ] Makefile target `make test-certs` uses wolfCLU
+- [ ] CI/CD pipeline generates certs with wolfCLU
+- [ ] Scripts updated (tests/poc/generate_certs_wolfclu.sh)
+- [ ] Fallback to OpenSSL if wolfCLU not available
+- [ ] Documentation updated (BUILD.md, TESTING.md)
+- [ ] Certificate validation with `wolfssl verify`
+- [ ] Benchmarking with `wolfssl speed`
+- [ ] All existing tests pass with wolfCLU-generated certs
+- [ ] Examples in docs for manual certificate generation
+
+**Dependencies**:
+- US-006: PoC TLS Server (uses certificates)
+- US-007: PoC TLS Client (uses certificates)
+
+**Technical Notes**:
+```bash
+# Replace OpenSSL commands with wolfCLU
+# Before: openssl genrsa -out ca-key.pem 4096
+# After:  wolfssl genkey -out ca-key.pem -keytype rsa -size 4096
+
+# Before: openssl req -new -x509 ...
+# After:  wolfssl gencert -key ca-key.pem -out ca-cert.pem ...
+```
+
+**Files to Modify**:
+- `Makefile` (add test-certs target)
+- `tests/poc/benchmark.sh` (use wolfCLU if available)
+- `tests/poc/generate_certs.sh` (rename to .sh.openssl backup)
+- `tests/poc/generate_certs_wolfclu.sh` (NEW)
+- `deploy/podman/scripts/build-dev.sh` (install wolfCLU)
+- `docs/BUILDING.md` (document wolfCLU usage)
+- `.github/workflows/tests.yml` (CI certificate generation)
+
+**Testing**:
+- Verify certificate generation works
+- Verify certs are valid (wolfssl verify)
+- Verify TLS handshake with wolfCLU certs
+- Compare cert characteristics with OpenSSL-generated
+
+**Reference**:
+- docs/architecture/WOLFSSL_ECOSYSTEM.md (wolfCLU section)
+- https://wolfssl.com/documentation/manuals/wolfclu/
+- https://github.com/wolfSSL/wolfCLU
+
+**Benefits**:
+- Consistent crypto backend (wolfSSL throughout)
+- No OpenSSL dependency for testing
+- Simpler commands than OpenSSL
+- Better alignment with production wolfSSL usage
+
+---
+
+## Updated Story Summary
+
+### Total Stories: 44 (was 30)
+
+**By Priority**:
+- **P0 (Critical)**: 7 stories, 62 points
+- **P1 (High)**: 13 stories, 147 points (+34 from wolfSentry, wolfPKCS11)
+- **P2 (Medium)**: 6 stories, 42 points (+5 from wolfCLU)
+- **P3 (Low)**: 4 stories, 16 points
+
+**Total Story Points**: 267 (was 220)
+
+**New Ecosystem Stories**:
+- US-042: wolfSentry IDPS (13 points, P1, Sprint 5-6)
+- US-043: wolfPKCS11 HSM (21 points, P1, Sprint 8-9)
+- US-044: wolfCLU Tools (5 points, P2, Sprint 11)
+
+**Updated Velocity Estimate**:
+- Sprint capacity: 20-30 points
+- Total sprints: 267 ÷ 25 = ~11 sprints (22 weeks)
+- Phase 1 (P0+P1): 209 points = ~8-10 sprints (16-20 weeks)
+
+---
+
+**Document Version**: 1.1
+**Last Updated**: 2025-10-29 (Added wolfSSL ecosystem stories)
 **Next Review**: Sprint 0 Retrospective
