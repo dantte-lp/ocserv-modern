@@ -28,9 +28,9 @@ endif()
 
 # Compiler flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector-strong -D_FORTIFY_SOURCE=2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector-strong")
 set(CMAKE_C_FLAGS_DEBUG "-g -O0 -DDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -DNDEBUG -D_FORTIFY_SOURCE=2")
 
 # Linker flags for security hardening
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,relro -Wl,-z,now")

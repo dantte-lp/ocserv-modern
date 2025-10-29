@@ -109,41 +109,59 @@ This is the first major release of ocserv-modern, representing a complete migrat
   - [x] CI/CD infrastructure docs (46KB)
   - [x] All documentation committed and pushed
 
-**Progress**: 8/29 SP completed (28%)
+**Progress**: 12/29 SP completed (41%)
 
-###### In Progress (2025-10-29 Afternoon)
+###### Completed (2025-10-29 Afternoon - Continued)
 
-**Container Build** (BLOCKING)
-- [🔄] Dev container building in background
-  - Started: 2025-10-29 ~15:30
-  - Status: 22% complete (CMake compilation phase)
-  - Expected completion: ~30-40 minutes
-  - Log: `/tmp/ocserv-dev-build.log`
+**Container Build & Fixes** (2 SP - unplanned)
+- [x] Fix sudoers.d directory issue in build-dev.sh
+  - Commit: `ec1c31e` - `fix(containers): Create sudoers.d directory before writing`
+  - Container now builds successfully
+- [x] Fix CMakeLists.txt _FORTIFY_SOURCE issue
+  - Moved _FORTIFY_SOURCE=2 to Release build only (incompatible with Debug -O0)
+  - Debug builds now compile without errors
 
-**Pending Testing** (BLOCKED by container build)
+**Library Compatibility Testing** (8 SP - COMPLETED with notes)
+- [x] **Container image built successfully**: `localhost/ocserv-modern-dev:latest`
+- [x] **Library versions confirmed**:
+  - CMake 3.30.5 ✅
+  - GCC 14.2.1 ✅
+  - wolfSSL 5.8.2 ✅
+  - libuv 1.51.0 ✅
+  - cJSON 1.7.19 ✅
+  - mimalloc 3.1.5 ✅ (smoke test only)
+  - Doxygen 1.13.2 ✅
+  - Ceedling/Unity ❌ (not found by CMake)
+- [x] **wolfSSL TLS 1.3 validation**:
+  - PoC server/client test: ✅ PASS (50 handshakes successful)
+  - TLS_AES_128_GCM_SHA256 cipher negotiation: ✅ PASS
+  - Certificate validation (RSA-PSS): ✅ PASS
+  - Session resumption: ✅ Session tickets received
+  - Data exchange: ✅ Echo requests/responses working
+- [x] **Testing results documented**:
+  - `docs/sprints/sprint-2/LIBRARY_TESTING_RESULTS.md` (8KB)
+  - `docs/sprints/sprint-2/SESSION_2025-10-29_CONTINUED.md` (7KB)
 
-###### Pending (Awaiting Container Completion)
+###### In Progress (CRITICAL Priority)
 
-**Library Compatibility Testing** (13 SP)
-- [ ] mimalloc v3.1.5 validation (CRITICAL - 5 SP)
-  - [ ] Phase 1: Smoke tests (unit tests pass)
-  - [ ] Phase 2: Memory leak detection (valgrind)
-  - [ ] Phase 3: Stress testing (10,000 connections)
-  - [ ] Phase 4: Performance benchmarking
-  - [ ] Phase 5: Long-running stability (24h)
-  - [ ] GO/NO-GO decision by 2025-11-13
-- [ ] libuv 1.51.0 testing (3 SP)
-  - [ ] Event loop functionality
-  - [ ] Async I/O operations
-  - [ ] Integration tests
-- [ ] cJSON 1.7.19 testing (2 SP)
-  - [ ] JSON parsing/serialization
-  - [ ] Memory management
-  - [ ] Edge cases
-- [ ] wolfSSL performance validation (3 SP)
-  - [ ] Verify --disable-sp-asm impact
-  - [ ] Benchmark vs Sprint 1 baseline
-  - [ ] Ensure ≥45% performance target met
+**mimalloc v3.1.5 Comprehensive Testing** (5 SP - CRITICAL)
+- [x] Phase 1: Smoke tests (installation verified) ✅
+- [ ] Phase 2: Memory leak detection (valgrind) - **REQUIRED**
+- [ ] Phase 3: Stress testing (10,000 allocations) - **REQUIRED**
+- [ ] Phase 4: Performance benchmarking vs v2.2.4 - **REQUIRED**
+- [ ] Phase 5: Long-running stability (24 hours) - **REQUIRED**
+- [ ] **GO/NO-GO decision** by 2025-11-13 - **BLOCKING SPRINT 2 COMPLETION**
+- **Risk**: Major version upgrade (v2→v3) with potential breaking changes
+- **Fallback**: Downgrade to mimalloc v2.2.4 if testing fails
+
+###### Pending (Next Tasks)
+
+**Library Integration Testing** (5 SP)
+- [ ] libuv 1.51.0 integration tests (not yet integrated into codebase)
+- [ ] cJSON 1.7.19 integration tests (not yet integrated into codebase)
+- [ ] wolfSSL performance validation (verify --disable-sp-asm impact)
+- [ ] Benchmark vs Sprint 1 baseline
+- [ ] Ensure ≥45% performance target met
 
 **Priority String Parser Implementation** (8 SP)
 - [ ] Design parser architecture
@@ -153,11 +171,22 @@ This is the first major release of ocserv-modern, representing a complete migrat
 - [ ] Integration tests
 - [ ] Documentation
 
-**Sprint 2 Risks**:
-- 🔴 CRITICAL: mimalloc v3 may have compatibility issues (25% probability)
-- ⚠️ HIGH: Container build may fail (currently at 22%, monitoring)
+**Sprint 2 Risks** (Updated 2025-10-29 Afternoon):
+- 🔴 CRITICAL: mimalloc v3 comprehensive testing incomplete (probability: 100%, active)
+  - Mitigation: 5-phase testing plan in place, GO/NO-GO decision by 2025-11-13
+  - Fallback: Downgrade to v2.2.4 if issues found
+  - **BLOCKING**: Sprint 2 completion
+- ✅ ~~HIGH: Container build may fail~~ - **RESOLVED** (sudoers.d fix applied)
+- ⚠️ MEDIUM: Ceedling/Unity test framework not found (probability: 100%, occurred)
+  - Impact: Unit test builds disabled by CMake
+  - Mitigation: Use PoC tests until framework fixed
+  - Workaround: Defer to US-007 (testing infrastructure)
 - ⚠️ MEDIUM: --disable-sp-asm may impact performance more than estimated
-- ⚠️ MEDIUM: Time remaining in sprint may be insufficient for parser implementation
+  - Impact: 5-10% expected degradation not yet validated
+  - Mitigation: Performance benchmarking in progress
+- ⚠️ MEDIUM: Time remaining in sprint may be insufficient for all tasks
+  - Current progress: 41% with 14 days remaining
+  - Mitigation: Focus on critical path (mimalloc, priority parser)
 
 ---
 
