@@ -22,7 +22,7 @@ CJSON_VERSION="${CJSON_VERSION:-v1.7.18}"  # Using v1.7.18 instead of v1.7.19 fo
 MIMALLOC_VERSION="${MIMALLOC_VERSION:-v2.2.4}"
 
 # Base image
-BASE_IMAGE="${BASE_IMAGE:-registry.access.redhat.com/ubi9/ubi:latest}"
+BASE_IMAGE="${BASE_IMAGE:-oraclelinux:10}"
 
 # Color output
 RED='\033[0;31m'
@@ -74,6 +74,23 @@ buildah config \
     --label "org.opencontainers.image.licenses=GPLv2" \
     "$container"
 
+# Enable Oracle Linux 10 repositories
+log_info "Enabling Oracle Linux 10 repositories..."
+buildah run "$container" -- bash -c "
+    dnf config-manager --set-enabled ol10_addons
+    dnf config-manager --set-enabled ol10_appstream
+    dnf config-manager --set-enabled ol10_codeready_builder
+    dnf config-manager --set-enabled ol10_distro_builder
+"
+
+# Install EPEL repository for additional packages
+log_info "Installing EPEL repository..."
+buildah run "$container" -- bash -c "
+    dnf install -y oracle-epel-release-el10
+    dnf update -y --allowerasing
+    dnf clean all
+"
+
 # Install base development tools
 log_info "Installing base development tools..."
 buildah run "$container" -- bash -c "dnf install -y --allowerasing \
@@ -86,7 +103,7 @@ buildah run "$container" -- bash -c "dnf install -y --allowerasing \
     autoconf \
     automake \
     libtool \
-    pkgconfig \
+    pkgconf \
     git \
     vim \
     nano \
@@ -117,12 +134,10 @@ buildah run "$container" -- bash -c "dnf install -y \
     check-devel \
     pcre2-devel \
     libcap-ng-devel \
-    tcp_wrappers-devel \
     systemd-devel \
-    http-parser-devel \
     libtalloc-devel \
-    libradcli-devel \
-    oath-toolkit-devel \
+    radcli-devel \
+    liboath-devel \
     gperf \
     && dnf clean all"
 
@@ -133,7 +148,6 @@ buildah run "$container" -- bash -c "dnf install -y \
     graphviz \
     cppcheck \
     clang-tools-extra \
-    lcov \
     gcovr \
     && dnf clean all"
 
