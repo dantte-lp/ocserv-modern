@@ -69,3 +69,4 @@ latex/
 # Temporary files
 *.tmp
 .DS_Store
+.deployment-credentials
