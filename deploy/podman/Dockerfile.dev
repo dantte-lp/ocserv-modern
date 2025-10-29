@@ -63,7 +63,7 @@ RUN dnf install -y \
 
 # Build and install cppcheck from source (not available in OL10 repos)
 RUN cd /tmp && \
-    git clone --depth 1 --branch 2.16.3 https://github.com/danmar/cppcheck.git && \
+    git clone --depth 1 --branch 2.18.3 https://github.com/danmar/cppcheck.git && \
     cd cppcheck && \
     mkdir build && cd build && \
     cmake .. \
