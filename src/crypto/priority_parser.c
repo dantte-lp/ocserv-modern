@@ -197,7 +197,7 @@ static const char *known_modifiers[] = {
 /**
  * Classify token based on content
  */
-static token_type_t classify_token(const char *start, size_t length)
+static token_type_t classify_token(const char * const start, const size_t length)
 {
     // Create null-terminated string for comparison
     char token[PRIORITY_MAX_TOKEN_LEN];
@@ -427,8 +427,9 @@ static inline void disable_tls_version(priority_config_t *config,
 /**
  * Parse base keyword and set defaults
  */
-static int parse_base_keyword(const char *keyword, size_t keyword_len,
-                              priority_config_t *config)
+static int parse_base_keyword(const char * const keyword,
+                              const size_t keyword_len,
+                              priority_config_t * const config)
 {
     char kw[PRIORITY_MAX_TOKEN_LEN];
     if (keyword_len >= sizeof(kw)) {
@@ -506,8 +507,10 @@ static int parse_base_keyword(const char *keyword, size_t keyword_len,
 /**
  * Parse TLS version specification
  */
-static int parse_version(const char *version_str, size_t version_len,
-                         bool is_addition, priority_config_t *config)
+static int parse_version(const char * const version_str,
+                         const size_t version_len,
+                         const bool is_addition,
+                         priority_config_t * const config)
 {
     char ver[PRIORITY_MAX_TOKEN_LEN];
     if (version_len >= sizeof(ver)) {
@@ -550,8 +553,9 @@ static int parse_version(const char *version_str, size_t version_len,
 /**
  * Parse modifier (% keyword)
  */
-static int parse_modifier(const char *modifier_str, size_t modifier_len,
-                          priority_config_t *config)
+static int parse_modifier(const char * const modifier_str,
+                          const size_t modifier_len,
+                          priority_config_t * const config)
 {
     char mod[PRIORITY_MAX_TOKEN_LEN];
     if (modifier_len >= sizeof(mod)) {
@@ -584,8 +588,10 @@ static int parse_modifier(const char *modifier_str, size_t modifier_len,
 /**
  * Parse cipher specification
  */
-static int parse_cipher(const char *cipher_str, size_t cipher_len,
-                        bool is_addition, priority_config_t *config)
+static int parse_cipher(const char * const cipher_str,
+                        const size_t cipher_len,
+                        const bool is_addition,
+                        priority_config_t * const config)
 {
     if (cipher_len >= PRIORITY_MAX_CIPHER_NAME) {
         return PRIORITY_E_INVALID_CIPHER;
