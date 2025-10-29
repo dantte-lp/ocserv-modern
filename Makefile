@@ -140,7 +140,7 @@ poc-both:
 	@mv poc-client poc-client-gnutls
 	@echo ""
 	@echo "Building PoC with wolfSSL..."
-	@$(MAKE) -s clean
+	@rm -f src/crypto/*.o
 	@$(MAKE) -s poc BACKEND=wolfssl
 	@mv poc-server poc-server-wolfssl
 	@mv poc-client poc-client-wolfssl

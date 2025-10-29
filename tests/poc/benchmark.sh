@@ -10,11 +10,15 @@ set -e
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVER="${SCRIPT_DIR}/tls_poc_server"
-CLIENT="${SCRIPT_DIR}/tls_poc_client"
-CERT_FILE="${SCRIPT_DIR}/test_cert.pem"
-KEY_FILE="${SCRIPT_DIR}/test_key.pem"
-CA_FILE="${SCRIPT_DIR}/test_ca.pem"
+WORKSPACE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+SERVER_GNUTLS="${WORKSPACE_DIR}/poc-server-gnutls"
+CLIENT_GNUTLS="${WORKSPACE_DIR}/poc-client-gnutls"
+SERVER_WOLFSSL="${WORKSPACE_DIR}/poc-server-wolfssl"
+CLIENT_WOLFSSL="${WORKSPACE_DIR}/poc-client-wolfssl"
+CERT_DIR="${WORKSPACE_DIR}/tests/certs"
+CERT_FILE="${CERT_DIR}/server-cert.pem"
+KEY_FILE="${CERT_DIR}/server-key.pem"
+CA_FILE="${CERT_DIR}/ca-cert.pem"
 
 # Default parameters
 PORT=4433
@@ -86,18 +90,22 @@ done
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
-# Check if server and client exist
-if [[ ! -f "$SERVER" ]]; then
-    print_msg "$RED" "ERROR: Server binary not found: $SERVER"
-    print_msg "$YELLOW" "Please compile the PoC server first."
-    exit 1
-fi
+# Check if binaries exist
+check_binaries() {
+    if [[ ! -f "$SERVER_GNUTLS" || ! -f "$CLIENT_GNUTLS" ]]; then
+        print_msg "$RED" "ERROR: GnuTLS binaries not found"
+        print_msg "$YELLOW" "Please run: make poc-both"
+        return 1
+    fi
 
-if [[ ! -f "$CLIENT" ]]; then
-    print_msg "$RED" "ERROR: Client binary not found: $CLIENT"
-    print_msg "$YELLOW" "Please compile the PoC client first."
-    exit 1
-fi
+    if [[ ! -f "$SERVER_WOLFSSL" || ! -f "$CLIENT_WOLFSSL" ]]; then
+        print_msg "$RED" "ERROR: wolfSSL binaries not found"
+        print_msg "$YELLOW" "Please run: make poc-both"
+        return 1
+    fi
+
+    return 0
+}
 
 # Generate test certificates if they don't exist
 generate_test_certs() {
@@ -138,10 +146,19 @@ generate_test_certs() {
 start_server() {
     local backend=$1
     local log_file="${OUTPUT_DIR}/server_${backend}_${TIMESTAMP}.log"
+    local server_bin
+
+    if [[ "$backend" == "gnutls" ]]; then
+        server_bin="$SERVER_GNUTLS"
+    else
+        server_bin="$SERVER_WOLFSSL"
+    fi
 
     print_msg "$BLUE" "Starting $backend server on port $PORT..."
 
-    "$SERVER" \
+    # Start server with proper library path
+    LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}" \
+        "$server_bin" \
         --backend "$backend" \
         --port "$PORT" \
         --cert "$CERT_FILE" \
@@ -189,12 +206,20 @@ stop_server() {
 run_benchmark() {
     local backend=$1
     local output_file="${OUTPUT_DIR}/results_${backend}_${TIMESTAMP}.json"
+    local client_bin
+
+    if [[ "$backend" == "gnutls" ]]; then
+        client_bin="$CLIENT_GNUTLS"
+    else
+        client_bin="$CLIENT_WOLFSSL"
+    fi
 
     print_msg "$BLUE" "Running $backend benchmark (iterations: $ITERATIONS)..."
 
     # Warmup
     print_msg "$YELLOW" "  Warmup ($WARMUP_ITERATIONS iterations)..."
-    "$CLIENT" \
+    LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}" \
+        "$client_bin" \
         --backend "$backend" \
         --port "$PORT" \
         --iterations "$WARMUP_ITERATIONS" \
@@ -202,7 +227,8 @@ run_benchmark() {
 
     # Actual benchmark
     print_msg "$GREEN" "  Benchmarking..."
-    if "$CLIENT" \
+    if LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}" \
+        "$client_bin" \
         --backend "$backend" \
         --port "$PORT" \
         --iterations "$ITERATIONS" \
@@ -253,6 +279,11 @@ main() {
     print_msg "$BLUE" "Port: $PORT"
     print_msg "$BLUE" "Backends: ${BACKENDS[*]}"
     echo ""
+
+    # Check if binaries exist
+    if ! check_binaries; then
+        exit 1
+    fi
 
     # Generate certificates
     generate_test_certs
