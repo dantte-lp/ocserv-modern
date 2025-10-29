@@ -140,16 +140,18 @@ if(BUILD_TESTING)
 
         # Create Unity library
         add_library(unity STATIC ${UNITY_SRC_DIR}/unity.c)
-        target_include_directories(unity PUBLIC ${UNITY_INCLUDE_DIR})
+        target_include_directories(unity PUBLIC ${UNITY_INCLUDE_DIR} ${UNITY_INCLUDE_DIR}/unity)
 
         # Unit tests for TLS backends
         if(USE_WOLFSSL)
             add_executable(test_tls_wolfssl tests/unit/test_tls_wolfssl.c)
+            target_include_directories(test_tls_wolfssl PRIVATE ${TLS_INCLUDE_DIRS})
             target_link_libraries(test_tls_wolfssl PRIVATE tls_abstract unity ${TLS_LIBRARIES})
             target_compile_definitions(test_tls_wolfssl PRIVATE ${TLS_DEFINITIONS})
             add_test(NAME test_tls_wolfssl COMMAND test_tls_wolfssl)
         else()
             add_executable(test_tls_gnutls tests/unit/test_tls_gnutls.c)
+            target_include_directories(test_tls_gnutls PRIVATE ${TLS_INCLUDE_DIRS})
             target_link_libraries(test_tls_gnutls PRIVATE tls_abstract unity ${TLS_LIBRARIES})
             target_compile_definitions(test_tls_gnutls PRIVATE ${TLS_DEFINITIONS})
             add_test(NAME test_tls_gnutls COMMAND test_tls_gnutls)

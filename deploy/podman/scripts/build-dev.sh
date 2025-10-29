@@ -240,6 +240,38 @@ buildah run "$container" -- bash -c "
 #    rm -rf wolfCLU-${WOLFCLU_VERSION#v} wolfclu.tar.gz
 #"
 
+# Build and install Unity v2.6.1
+log_info "Installing Unity testing framework ${UNITY_VERSION}..."
+buildah run "$container" -- bash -c "
+    set -euo pipefail
+    cd /tmp/build
+    curl -LsSf -o unity.tar.gz https://github.com/ThrowTheSwitch/Unity/archive/refs/tags/v${UNITY_VERSION}.tar.gz
+    tar xzf unity.tar.gz
+    cd Unity-${UNITY_VERSION}
+    mkdir -p /usr/local/include/unity
+    mkdir -p /usr/local/src/unity
+    cp src/unity.h src/unity_internals.h /usr/local/include/unity/
+    cp src/unity.c /usr/local/src/unity/
+    cp -r extras /usr/local/src/unity/
+    cd /tmp/build
+    rm -rf Unity-${UNITY_VERSION} unity.tar.gz
+"
+
+# Build and install CMock v2.6.0
+log_info "Installing CMock ${CMOCK_VERSION}..."
+buildah run "$container" -- bash -c "
+    set -euo pipefail
+    cd /tmp/build
+    curl -LsSf -o cmock.tar.gz https://github.com/ThrowTheSwitch/CMock/archive/refs/tags/v${CMOCK_VERSION}.tar.gz
+    tar xzf cmock.tar.gz
+    cd CMock-${CMOCK_VERSION}
+    mkdir -p /usr/local/lib/cmock /usr/local/src/cmock
+    cp -r lib/* /usr/local/lib/cmock/
+    cp -r src/* /usr/local/src/cmock/
+    cd /tmp/build
+    rm -rf CMock-${CMOCK_VERSION} cmock.tar.gz
+"
+
 # Build and install libuv v1.51.0
 log_info "Building libuv ${LIBUV_VERSION} from source..."
 buildah run "$container" -- bash -c "
