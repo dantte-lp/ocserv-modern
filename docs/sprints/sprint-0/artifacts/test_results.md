@@ -1,15 +1,15 @@
-# Sprint 0 Test Results - ocserv-modern
+# Sprint 0 Test Results - wolfguard
 ## TLS Backend Implementation and Validation
 
 **Date:** October 29, 2025
 **Sprint:** Sprint 0 - Foundation & Validation
-**Environment:** Oracle Linux 10 (Container: localhost/ocserv-modern-dev:latest)
+**Environment:** Oracle Linux 10 (Container: localhost/wolfguard-dev:latest)
 
 ---
 
 ## Executive Summary
 
-Sprint 0 focused on implementing and validating dual TLS backend support (GnuTLS and wolfSSL) for the ocserv-modern VPN server. This document summarizes compilation testing, unit test results, and technical findings.
+Sprint 0 focused on implementing and validating dual TLS backend support (GnuTLS and wolfSSL) for the wolfguard VPN server. This document summarizes compilation testing, unit test results, and technical findings.
 
 ### Key Achievements
 
@@ -241,7 +241,7 @@ tests/certs/server-key.pem   # Private key (unencrypted for testing)
 ```
 
 **Certificate Details:**
-- **Subject:** CN=localhost, O=ocserv-modern, C=US
+- **Subject:** CN=localhost, O=wolfguard, C=US
 - **Validity:** 365 days
 - **Algorithm:** RSA 2048-bit + SHA256
 - **Purpose:** PoC server testing only (NOT for production)
@@ -403,4 +403,4 @@ tests/poc/tls_poc_client.c         # Pending fixes (not critical)
 - [US-010] wolfSSL Performance Validation
 
 **Report Generated:** 2025-10-29 09:00 UTC
-**Author:** Claude (ocserv-modern Development Team)
+**Author:** Claude (wolfguard Development Team)

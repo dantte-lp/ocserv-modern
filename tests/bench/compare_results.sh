@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Benchmark Results Comparison Script - ocserv-modern
+# Benchmark Results Comparison Script - wolfguard
 #
-# Copyright (C) 2025 ocserv-modern Contributors
+# Copyright (C) 2025 wolfguard Contributors
 #
 # Compares benchmark results between GnuTLS and wolfSSL backends
 # and generates a GO/NO-GO decision report.

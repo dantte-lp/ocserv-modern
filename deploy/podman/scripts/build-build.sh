@@ -3,13 +3,13 @@ set -euo pipefail
 
 # build-build.sh - Build Container Build Script
 # Creates a release-optimized build environment for producing production artifacts
-# for ocserv-modern
+# for wolfguard
 
 # Script configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-IMAGE_NAME="${IMAGE_NAME:-localhost/ocserv-modern-build}"
+IMAGE_NAME="${IMAGE_NAME:-localhost/wolfguard-build}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 
 # Library versions (verified 2025-10-29)
@@ -62,12 +62,12 @@ container=$(buildah from "$BASE_IMAGE")
 
 # Configure container metadata
 buildah config \
-    --label "io.ocserv-modern.version=2.0.0-alpha.1" \
-    --label "io.ocserv-modern.environment=build" \
+    --label "io.wolfguard.version=2.0.0-alpha.1" \
+    --label "io.wolfguard.environment=build" \
     --label "io.buildah.version=1.0" \
     --label "org.opencontainers.image.created=$BUILD_DATE" \
-    --label "org.opencontainers.image.title=ocserv-modern-build" \
-    --label "org.opencontainers.image.description=Build environment for ocserv-modern release artifacts" \
+    --label "org.opencontainers.image.title=wolfguard-build" \
+    --label "org.opencontainers.image.description=Build environment for wolfguard release artifacts" \
     --label "org.opencontainers.image.version=2.0.0-alpha.1" \
     --label "org.opencontainers.image.licenses=GPLv2" \
     "$container"
@@ -333,12 +333,12 @@ buildah run "$container" -- bash -c "
 #!/bin/bash
 set -euo pipefail
 
-# Release build script for ocserv-modern
+# Release build script for wolfguard
 WORKSPACE=\${WORKSPACE:-/workspace}
 ARTIFACTS=\${ARTIFACTS:-/artifacts}
 
 echo '================================================'
-echo 'ocserv-modern Release Build'
+echo 'wolfguard Release Build'
 echo '================================================'
 
 cd \$WORKSPACE
@@ -376,7 +376,7 @@ fi
 # Create tarball
 echo 'Creating tarball...'
 cd \$ARTIFACTS
-tar czf ocserv-modern-\$(date +%Y%m%d).tar.gz bin/ lib/ share/
+tar czf wolfguard-\$(date +%Y%m%d).tar.gz bin/ lib/ share/
 
 echo '================================================'
 echo 'Build completed successfully!'
@@ -408,4 +408,4 @@ log_info "Build container build completed successfully!"
 log_info "Image: $IMAGE_NAME:$IMAGE_TAG"
 log_info ""
 log_info "To build release artifacts:"
-log_info "  podman run -it --rm -v /opt/projects/repositories/ocserv-modern:/workspace:Z -v ./artifacts:/artifacts:Z $IMAGE_NAME:$IMAGE_TAG"
+log_info "  podman run -it --rm -v /opt/projects/repositories/wolfguard:/workspace:Z -v ./artifacts:/artifacts:Z $IMAGE_NAME:$IMAGE_TAG"

@@ -1,7 +1,7 @@
 FROM oraclelinux:10
 
-LABEL maintainer="ocserv-modern development team"
-LABEL description="Build environment for release builds of ocserv-modern"
+LABEL maintainer="wolfguard development team"
+LABEL description="Build environment for release builds of wolfguard"
 
 # Install build tools
 RUN dnf install -y \

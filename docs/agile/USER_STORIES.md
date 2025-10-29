@@ -1,6 +1,6 @@
-# User Stories - ocserv-modern Sprint Backlog
+# User Stories - wolfguard Sprint Backlog
 
-**Project**: ocserv-modern v2.0.0-alpha.1
+**Project**: wolfguard v2.0.0-alpha.1
 **Last Updated**: 2025-10-29
 **Methodology**: Scrum/Agile
 

@@ -1,7 +1,7 @@
 FROM oraclelinux:10
 
-LABEL maintainer="ocserv-modern development team"
-LABEL description="Development environment for ocserv-modern with wolfSSL and modern C libraries"
+LABEL maintainer="wolfguard development team"
+LABEL description="Development environment for wolfguard with wolfSSL and modern C libraries"
 
 # Build arguments for tool versions
 ARG CMAKE_VERSION=4.1.2

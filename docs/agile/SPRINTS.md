@@ -1,6 +1,6 @@
-# Sprint Planning and Retrospectives - ocserv-modern
+# Sprint Planning and Retrospectives - wolfguard
 
-**Project**: ocserv-modern v2.0.0
+**Project**: wolfguard v2.0.0
 **Sprint Duration**: 2 weeks
 **Team Size**: 2 developers
 **Sprint Start Day**: Monday

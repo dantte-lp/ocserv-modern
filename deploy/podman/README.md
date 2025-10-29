@@ -1,6 +1,6 @@
-# ocserv-modern Podman Container Infrastructure
+# wolfguard Podman Container Infrastructure
 
-Production-grade containerized development environment for ocserv-modern using **Podman**, **Buildah**, **Skopeo**, and **crun**.
+Production-grade containerized development environment for wolfguard using **Podman**, **Buildah**, **Skopeo**, and **crun**.
 
 ## Quick Start
 
@@ -87,7 +87,7 @@ sudo dnf install fuse-overlayfs slirp4netns container-selinux
 ## Installation
 
 ```bash
-cd /opt/projects/repositories/ocserv-modern/deploy/podman
+cd /opt/projects/repositories/wolfguard/deploy/podman
 
 # Build all containers (8-12 minutes)
 make build-all
@@ -170,7 +170,7 @@ podman-compose run --rm test bash -c "ninja -C build coverage-html"
 # Build release
 make release
 
-# Output: artifacts/ocserv-modern-YYYYMMDD.tar.gz
+# Output: artifacts/wolfguard-YYYYMMDD.tar.gz
 ```
 
 ### CI (ci)
@@ -312,7 +312,7 @@ podman login ghcr.io
 make push-all
 
 # Push specific image
-./scripts/push-image.sh localhost/ocserv-modern-dev:latest ghcr.io/dantte-lp/ocserv-modern-dev:latest
+./scripts/push-image.sh localhost/wolfguard-dev:latest ghcr.io/dantte-lp/wolfguard-dev:latest
 ```
 
 ### Inspect Images
@@ -322,7 +322,7 @@ make push-all
 make inspect-all
 
 # Inspect specific
-skopeo inspect containers-storage:localhost/ocserv-modern-dev:latest
+skopeo inspect containers-storage:localhost/wolfguard-dev:latest
 ```
 
 ## Troubleshooting
@@ -339,7 +339,7 @@ grep "^$USER:" /etc/subuid /etc/subgid
 ```bash
 ./scripts/verify-selinux.sh
 sudo ausearch -m avc -ts recent | grep container
-chcon -R -t container_file_t /opt/projects/repositories/ocserv-modern
+chcon -R -t container_file_t /opt/projects/repositories/wolfguard
 ```
 
 ### Build Failures
@@ -688,7 +688,7 @@ make test-unit BACKEND=wolfssl | tee test-output.log
 
 ```bash
 # Verify all tools are installed correctly
-podman run --rm localhost/ocserv-modern-dev:latest bash -c "
+podman run --rm localhost/wolfguard-dev:latest bash -c "
   echo '=== Build Tools ===' &&
   cmake --version | head -1 &&
   gcc --version | head -1 &&

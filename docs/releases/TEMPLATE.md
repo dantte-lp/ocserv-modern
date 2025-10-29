@@ -1,4 +1,4 @@
-# Release Notes Template - ocserv-modern vX.Y.Z
+# Release Notes Template - wolfguard vX.Y.Z
 
 **Release Date**: YYYY-MM-DD
 **Release Type**: [Major | Minor | Patch | Alpha | Beta | RC]
@@ -217,8 +217,8 @@ replacement-option = enabled
 #### From Source
 
 ```bash
-git clone https://github.com/dantte-lp/ocserv-modern.git
-cd ocserv-modern
+git clone https://github.com/dantte-lp/wolfguard.git
+cd wolfguard
 git checkout vX.Y.Z
 meson setup build --buildtype=release
 meson compile -C build
@@ -229,24 +229,24 @@ sudo meson install -C build
 
 **Red Hat/Fedora/Oracle Linux**:
 ```bash
-sudo dnf install ocserv-modern
+sudo dnf install wolfguard
 ```
 
 **Debian/Ubuntu**:
 ```bash
-sudo apt install ocserv-modern
+sudo apt install wolfguard
 ```
 
 **FreeBSD**:
 ```bash
-sudo pkg install ocserv-modern
+sudo pkg install wolfguard
 ```
 
 #### Docker/Podman
 
 ```bash
-docker pull ghcr.io/dantte-lp/ocserv-modern:vX.Y.Z
-docker run -d --name ocserv -p 443:443 -p 443:443/udp ghcr.io/dantte-lp/ocserv-modern:vX.Y.Z
+docker pull ghcr.io/dantte-lp/wolfguard:vX.Y.Z
+docker run -d --name ocserv -p 443:443 -p 443:443/udp ghcr.io/dantte-lp/wolfguard:vX.Y.Z
 ```
 
 ### Upgrade from Previous Version
@@ -261,7 +261,7 @@ sudo cp -a /etc/ocserv /etc/ocserv.backup
 sudo systemctl stop ocserv
 
 # Upgrade package
-sudo dnf upgrade ocserv-modern
+sudo dnf upgrade wolfguard
 
 # Restart service
 sudo systemctl start ocserv
@@ -284,7 +284,7 @@ sudo systemctl status ocserv
 sudo systemctl stop ocserv
 
 # Downgrade package
-sudo dnf downgrade ocserv-modern-X.Y.Z
+sudo dnf downgrade wolfguard-X.Y.Z
 
 # Restore configuration if needed
 sudo cp -a /etc/ocserv.backup/* /etc/ocserv/
@@ -312,8 +312,8 @@ sudo systemctl start ocserv
 ### Workarounds
 
 For known issues, see:
-- GitHub Issues: https://github.com/dantte-lp/ocserv-modern/issues
-- FAQ: https://ocserv-modern.org/faq
+- GitHub Issues: https://github.com/dantte-lp/wolfguard/issues
+- FAQ: https://wolfguard.org/faq
 
 ---
 
@@ -334,9 +334,9 @@ For known issues, see:
 
 ### Links
 
-- Full Documentation: https://docs.ocserv-modern.org/vX.Y.Z
-- API Reference: https://api.ocserv-modern.org/vX.Y.Z
-- GitHub Repository: https://github.com/dantte-lp/ocserv-modern
+- Full Documentation: https://docs.wolfguard.org/vX.Y.Z
+- API Reference: https://api.wolfguard.org/vX.Y.Z
+- GitHub Repository: https://github.com/dantte-lp/wolfguard
 
 ---
 
@@ -369,7 +369,7 @@ Special thanks to all contributors who made this release possible:
 - @contributor3 - Documentation
 - @contributor4 - Testing
 
-Full contributor list: https://github.com/dantte-lp/ocserv-modern/graphs/contributors
+Full contributor list: https://github.com/dantte-lp/wolfguard/graphs/contributors
 
 ---
 
@@ -384,7 +384,7 @@ Full contributor list: https://github.com/dantte-lp/ocserv-modern/graphs/contrib
 ### Roadmap
 
 - See PROJECT_ROADMAP.md for long-term plans
-- Milestone tracking: https://github.com/dantte-lp/ocserv-modern/milestones
+- Milestone tracking: https://github.com/dantte-lp/wolfguard/milestones
 
 ---
 
@@ -392,19 +392,19 @@ Full contributor list: https://github.com/dantte-lp/ocserv-modern/graphs/contrib
 
 ### Getting Help
 
-- Documentation: https://docs.ocserv-modern.org
-- GitHub Issues: https://github.com/dantte-lp/ocserv-modern/issues
+- Documentation: https://docs.wolfguard.org
+- GitHub Issues: https://github.com/dantte-lp/wolfguard/issues
 - Mailing List: ocserv-dev@lists.infradead.org
-- Discord: https://discord.gg/ocserv-modern
+- Discord: https://discord.gg/wolfguard
 
 ### Reporting Issues
 
-Please report security issues privately to: security@ocserv-modern.org
+Please report security issues privately to: security@wolfguard.org
 For bugs, use GitHub Issues with the bug report template.
 
 ### Commercial Support
 
-For enterprise support options, contact: support@ocserv-modern.org
+For enterprise support options, contact: support@wolfguard.org
 
 ---
 
@@ -413,17 +413,17 @@ For enterprise support options, contact: support@ocserv-modern.org
 ### Release Artifacts
 
 ```
-SHA256 (ocserv-modern-X.Y.Z.tar.gz) = [hash]
-SHA256 (ocserv-modern-X.Y.Z.tar.xz) = [hash]
-SHA256 (ocserv-modern-X.Y.Z.rpm) = [hash]
-SHA256 (ocserv-modern-X.Y.Z.deb) = [hash]
+SHA256 (wolfguard-X.Y.Z.tar.gz) = [hash]
+SHA256 (wolfguard-X.Y.Z.tar.xz) = [hash]
+SHA256 (wolfguard-X.Y.Z.rpm) = [hash]
+SHA256 (wolfguard-X.Y.Z.deb) = [hash]
 ```
 
 ### Verification
 
 ```bash
-sha256sum -c ocserv-modern-X.Y.Z.sha256
-gpg --verify ocserv-modern-X.Y.Z.tar.gz.asc
+sha256sum -c wolfguard-X.Y.Z.sha256
+gpg --verify wolfguard-X.Y.Z.tar.gz.asc
 ```
 
 ---

@@ -1,9 +1,9 @@
-# Ceedling project configuration for ocserv-modern
+# Ceedling project configuration for wolfguard
 # Unity/CMock-based unit testing framework
 
 ---
 :project:
-  :name: ocserv-modern
+  :name: wolfguard
   :build_root: build/ceedling
   :use_exceptions: FALSE
   :use_test_preprocessor: TRUE

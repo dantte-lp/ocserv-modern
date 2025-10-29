@@ -1,7 +1,7 @@
 FROM oraclelinux:10
 
-LABEL maintainer="ocserv-modern development team"
-LABEL description="Testing environment for ocserv-modern"
+LABEL maintainer="wolfguard development team"
+LABEL description="Testing environment for wolfguard"
 
 # Install test dependencies
 RUN dnf install -y \

@@ -2,8 +2,8 @@
 
 **Date:** October 29, 2025
 **Sprint:** Sprint 1, Task 4
-**Tester:** Claude (ocserv-modern development assistant)
-**Environment:** Oracle Linux 10, Podman container (ocserv-modern-dev:latest)
+**Tester:** Claude (wolfguard development assistant)
+**Environment:** Oracle Linux 10, Podman container (wolfguard-dev:latest)
 
 ## Executive Summary
 
@@ -36,8 +36,8 @@ Successfully validated TLS/DTLS communication between PoC server and client usin
 ### Test Certificates
 
 ```
-Subject: CN=localhost, O=ocserv-modern, C=US
-Issuer: CN=localhost, O=ocserv-modern, C=US
+Subject: CN=localhost, O=wolfguard, C=US
+Issuer: CN=localhost, O=wolfguard, C=US
 Validity: Oct 29 05:58:49 2025 GMT to Oct 29 05:58:49 2026 GMT
 Algorithm: RSA 2048-bit with SHA-256
 ```
@@ -204,7 +204,7 @@ Server:
 
 ### Test Script
 
-Created automated test script: `/opt/projects/repositories/ocserv-modern/tests/poc/run_tests.sh`
+Created automated test script: `/opt/projects/repositories/wolfguard/tests/poc/run_tests.sh`
 
 **Features:**
 - Automatically builds both backend versions if needed
@@ -219,15 +219,15 @@ Created automated test script: `/opt/projects/repositories/ocserv-modern/tests/p
 ```bash
 # In container
 podman run --rm \
-  -v /opt/projects/repositories/ocserv-modern:/workspace:Z \
+  -v /opt/projects/repositories/wolfguard:/workspace:Z \
   -w /workspace \
-  localhost/ocserv-modern-dev:latest \
+  localhost/wolfguard-dev:latest \
   /workspace/tests/poc/run_tests.sh
 ```
 
 ### Logs
 
-All test logs saved to: `/opt/projects/repositories/ocserv-modern/tests/poc/logs/`
+All test logs saved to: `/opt/projects/repositories/wolfguard/tests/poc/logs/`
 
 Log files:
 - `server_gnutls_gnutls.log` - GnuTLS server with GnuTLS client
@@ -255,8 +255,8 @@ Log files:
 5. Added proper memory management (free paths in `tls_context_free()`)
 
 **Files Modified:**
-- `/opt/projects/repositories/ocserv-modern/src/crypto/tls_gnutls.h` (added fields to struct)
-- `/opt/projects/repositories/ocserv-modern/src/crypto/tls_gnutls.c` (implemented deferred loading)
+- `/opt/projects/repositories/wolfguard/src/crypto/tls_gnutls.h` (added fields to struct)
+- `/opt/projects/repositories/wolfguard/src/crypto/tls_gnutls.c` (implemented deferred loading)
 
 **Result:** ✅ GnuTLS server now starts successfully and loads certificates correctly.
 
@@ -269,7 +269,7 @@ Log files:
 **Solution:** Added `tls_context_set_verify(ctx, false, nullptr, nullptr)` call in PoC client to disable verification for testing purposes.
 
 **Files Modified:**
-- `/opt/projects/repositories/ocserv-modern/tests/poc/tls_poc_client.c`
+- `/opt/projects/repositories/wolfguard/tests/poc/tls_poc_client.c`
 
 **Note:** This is appropriate for PoC testing only. Production code must enable verification.
 
@@ -284,7 +284,7 @@ Log files:
 **Solution:** Added `export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"` to test script.
 
 **Files Modified:**
-- `/opt/projects/repositories/ocserv-modern/tests/poc/run_tests.sh`
+- `/opt/projects/repositories/wolfguard/tests/poc/run_tests.sh`
 
 **Result:** ✅ wolfSSL binaries now run successfully.
 
@@ -298,7 +298,7 @@ Log files:
 3. Try TCP connection test with bash: `echo > /dev/tcp/$HOST/$PORT`
 
 **Files Modified:**
-- `/opt/projects/repositories/ocserv-modern/tests/poc/run_tests.sh`
+- `/opt/projects/repositories/wolfguard/tests/poc/run_tests.sh`
 
 **Result:** ✅ Test script now works reliably in container environment.
 
@@ -377,13 +377,13 @@ These are the same cipher suite, just different naming conventions.
 
 ## Files Generated
 
-1. **Test Script:** `/opt/projects/repositories/ocserv-modern/tests/poc/run_tests.sh`
-2. **Test Logs:** `/opt/projects/repositories/ocserv-modern/tests/poc/logs/*.log`
-3. **Test Report:** `/opt/projects/repositories/ocserv-modern/docs/sprints/sprint-1/artifacts/poc_test_results.md` (this file)
+1. **Test Script:** `/opt/projects/repositories/wolfguard/tests/poc/run_tests.sh`
+2. **Test Logs:** `/opt/projects/repositories/wolfguard/tests/poc/logs/*.log`
+3. **Test Report:** `/opt/projects/repositories/wolfguard/docs/sprints/sprint-1/artifacts/poc_test_results.md` (this file)
 4. **Modified Source Files:**
-   - `/opt/projects/repositories/ocserv-modern/src/crypto/tls_gnutls.h`
-   - `/opt/projects/repositories/ocserv-modern/src/crypto/tls_gnutls.c`
-   - `/opt/projects/repositories/ocserv-modern/tests/poc/tls_poc_client.c`
+   - `/opt/projects/repositories/wolfguard/src/crypto/tls_gnutls.h`
+   - `/opt/projects/repositories/wolfguard/src/crypto/tls_gnutls.c`
+   - `/opt/projects/repositories/wolfguard/tests/poc/tls_poc_client.c`
 
 ## Next Steps
 

@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2025 ocserv-modern Contributors
+ * Copyright (C) 2025 wolfguard Contributors
  *
- * This file is part of ocserv-modern.
+ * This file is part of wolfguard.
  *
- * ocserv-modern is free software: you can redistribute it and/or modify it
+ * wolfguard is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3 of the License.
  *
- * ocserv-modern is distributed in the hope that it will be useful, but
+ * wolfguard is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
@@ -20,7 +20,7 @@
  * TLS Abstraction Layer - Backend Dispatcher
  *
  * This file provides the runtime backend selection and dispatching logic
- * for the TLS abstraction layer. It allows ocserv-modern to dynamically
+ * for the TLS abstraction layer. It allows wolfguard to dynamically
  * choose between GnuTLS and wolfSSL backends at initialization time.
  *
  * Architecture:

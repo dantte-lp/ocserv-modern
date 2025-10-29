@@ -74,7 +74,7 @@
 ### 4. Build Environment
 - **Base Image**: Oracle Linux 10
 - **Compiler**: GCC 14.2.1 (C23 support)
-- **Container**: localhost/ocserv-modern-dev:latest
+- **Container**: localhost/wolfguard-dev:latest
 - **Libraries**: wolfSSL v5.8.2-stable, GnuTLS 3.8.9
 
 ### 5. CI/CD
@@ -381,7 +381,7 @@ All critical blockers resolved:
 - `.github/workflows/containers.yml` - CI/CD configuration
 
 ### Container Images
-- `localhost/ocserv-modern-dev:latest` - Development environment
+- `localhost/wolfguard-dev:latest` - Development environment
 - Base: Oracle Linux 10
 - Compiler: GCC 14.2.1
 - Libraries: wolfSSL v5.8.2-stable, GnuTLS 3.8.9

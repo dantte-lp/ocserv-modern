@@ -9,7 +9,7 @@
 
 ## Summary
 
-ocserv-modern Sprint 2 includes an update from mimalloc v2.x to v3.1.5, representing a major version upgrade with API changes, behavioral modifications, and performance improvements. This migration requires comprehensive testing to ensure compatibility with ocserv-modern's memory allocation patterns.
+wolfguard Sprint 2 includes an update from mimalloc v2.x to v3.1.5, representing a major version upgrade with API changes, behavioral modifications, and performance improvements. This migration requires comprehensive testing to ensure compatibility with wolfguard's memory allocation patterns.
 
 ## Version Information
 
@@ -85,7 +85,7 @@ typedef struct mi_heap_options_s {
 } mi_heap_options_t;
 ```
 
-**Impact on ocserv-modern**: NONE (we don't use custom heaps currently)
+**Impact on wolfguard**: NONE (we don't use custom heaps currently)
 
 #### 2. Thread-Local Caching
 
@@ -98,7 +98,7 @@ typedef struct mi_heap_options_s {
 - New API for explicit cache flushing
 - Better NUMA affinity control
 
-**Impact on ocserv-modern**: LOW (default behavior acceptable)
+**Impact on wolfguard**: LOW (default behavior acceptable)
 
 #### 3. Statistics API
 
@@ -115,7 +115,7 @@ void mi_stats_reset();                 // NEW
 mi_stats_t mi_stats_get_current();    // NEW
 ```
 
-**Impact on ocserv-modern**: NONE (we don't collect mimalloc stats yet)
+**Impact on wolfguard**: NONE (we don't collect mimalloc stats yet)
 
 ### Behavioral Changes
 
@@ -453,9 +453,9 @@ warning: 'mi_heap_new' is deprecated, use 'mi_heap_new_ex' instead
 
 ### Internal Documentation
 
-- **Sprint 2 Session**: `/opt/projects/repositories/ocserv-modern/docs/sprints/sprint-2/SESSION_2025-10-29_AFTERNOON.md`
-- **Architecture**: `/opt/projects/repositories/ocserv-modern/docs/architecture/`
-- **Performance Baselines**: `/opt/projects/repositories/ocserv-modern/docs/benchmarks/`
+- **Sprint 2 Session**: `/opt/projects/repositories/wolfguard/docs/sprints/sprint-2/SESSION_2025-10-29_AFTERNOON.md`
+- **Architecture**: `/opt/projects/repositories/wolfguard/docs/architecture/`
+- **Performance Baselines**: `/opt/projects/repositories/wolfguard/docs/benchmarks/`
 
 ### Related RFCs
 

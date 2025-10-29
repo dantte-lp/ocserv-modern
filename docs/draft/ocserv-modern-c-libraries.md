@@ -1,4 +1,4 @@
-# Правильный набор C-библиотек для ocserv-modern
+# Правильный набор C-библиотек для wolfguard
 
 ## ⚠️ Важное предупреждение о совместимости
 
@@ -466,7 +466,7 @@ void publish_event(ipc_t *ipc, const char *event) {
 
 ```cmake
 cmake_minimum_required(VERSION 3.28)
-project(ocserv-modern 
+project(wolfguard 
         VERSION 2.0.0
         LANGUAGES C)  # Только C!
 
@@ -534,17 +534,17 @@ set(SOURCES
 )
 
 # Main executable
-add_executable(ocserv-modern ${SOURCES})
+add_executable(wolfguard ${SOURCES})
 
 # Include directories
-target_include_directories(ocserv-modern PRIVATE
+target_include_directories(wolfguard PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CORE_DEPS_INCLUDE_DIRS}
     ${EXTRA_DEPS_INCLUDE_DIRS}
 )
 
 # Link libraries - только C библиотеки!
-target_link_libraries(ocserv-modern PRIVATE
+target_link_libraries(wolfguard PRIVATE
     ${CORE_DEPS_LIBRARIES}
     ${EXTRA_DEPS_LIBRARIES}
     m                   # Math library
@@ -554,40 +554,40 @@ target_link_libraries(ocserv-modern PRIVATE
 
 # Optional libraries
 if(ENABLE_LMDB)
-    target_link_libraries(ocserv-modern PRIVATE lmdb)
-    target_compile_definitions(ocserv-modern PRIVATE HAVE_LMDB)
+    target_link_libraries(wolfguard PRIVATE lmdb)
+    target_compile_definitions(wolfguard PRIVATE HAVE_LMDB)
 endif()
 
 if(ENABLE_OATH)
-    target_link_libraries(ocserv-modern PRIVATE oath)
-    target_compile_definitions(ocserv-modern PRIVATE HAVE_OATH)
+    target_link_libraries(wolfguard PRIVATE oath)
+    target_compile_definitions(wolfguard PRIVATE HAVE_OATH)
 endif()
 
 if(ENABLE_PAM)
-    target_link_libraries(ocserv-modern PRIVATE pam)
-    target_compile_definitions(ocserv-modern PRIVATE HAVE_PAM)
+    target_link_libraries(wolfguard PRIVATE pam)
+    target_compile_definitions(wolfguard PRIVATE HAVE_PAM)
 endif()
 
 if(ENABLE_PROMETHEUS)
     find_library(PROM_LIB prom)
     find_library(PROMHTTP_LIB promhttp)
-    target_link_libraries(ocserv-modern PRIVATE ${PROM_LIB} ${PROMHTTP_LIB})
-    target_compile_definitions(ocserv-modern PRIVATE HAVE_PROMETHEUS)
+    target_link_libraries(wolfguard PRIVATE ${PROM_LIB} ${PROMHTTP_LIB})
+    target_compile_definitions(wolfguard PRIVATE HAVE_PROMETHEUS)
 endif()
 
 # Sanitizers для debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(ocserv-modern PRIVATE
+    target_compile_options(wolfguard PRIVATE
         -fsanitize=address,undefined
         -fno-omit-frame-pointer
     )
-    target_link_options(ocserv-modern PRIVATE
+    target_link_options(wolfguard PRIVATE
         -fsanitize=address,undefined
     )
 endif()
 
 # Installation
-install(TARGETS ocserv-modern DESTINATION bin)
+install(TARGETS wolfguard DESTINATION bin)
 install(FILES config/ocserv.toml DESTINATION /etc/ocserv)
 install(FILES config/zlog.conf DESTINATION /etc/ocserv)
 
@@ -641,7 +641,7 @@ RUN apk add --no-cache \
 RUN adduser -D -s /sbin/nologin ocserv
 
 # Копируем бинарник
-COPY --from=builder /build/build/ocserv-modern /usr/local/bin/
+COPY --from=builder /build/build/wolfguard /usr/local/bin/
 
 # Конфигурация
 COPY config/*.conf /etc/ocserv/
@@ -649,10 +649,10 @@ COPY config/*.toml /etc/ocserv/
 
 # Права и capabilities
 RUN chown -R ocserv:ocserv /etc/ocserv /var/lib/ocserv && \
-    setcap cap_net_admin,cap_net_bind_service=+ep /usr/local/bin/ocserv-modern
+    setcap cap_net_admin,cap_net_bind_service=+ep /usr/local/bin/wolfguard
 
 USER ocserv
-CMD ["/usr/local/bin/ocserv-modern"]
+CMD ["/usr/local/bin/wolfguard"]
 ```
 
 ## ✅ Production Checklist для C проекта
@@ -697,6 +697,6 @@ CMD ["/usr/local/bin/ocserv-modern"]
 
 ---
 
-*Документ подготовлен для проекта ocserv-modern*  
+*Документ подготовлен для проекта wolfguard*  
 *Версия: 2.0.0 | Дата: 2025-01-14*  
 *Фокус: Чистые C библиотеки без C++ зависимостей*

@@ -1,4 +1,4 @@
-# Исследование архитектуры ocserv-modern: Анализ и рекомендации
+# Исследование архитектуры wolfguard: Анализ и рекомендации
 
 ## Краткое резюме
 
@@ -113,7 +113,7 @@
 - Sanitizers (ASan, MSan, UBSan)
 - Safer APIs и bounded functions
 
-## 4. Рекомендации для ocserv-modern
+## 4. Рекомендации для wolfguard
 
 ### 4.1 Архитектурная стратегия
 
@@ -314,17 +314,17 @@ typedef struct connection {
 
 ### Долгосрочная перспектива:
 
-ocserv-modern может стать **эталонной реализацией** OpenConnect сервера, сочетая:
+wolfguard может стать **эталонной реализацией** OpenConnect сервера, сочетая:
 - Производительность kernel-mode решений
 - Безопасность modern C практик  
 - Гибкость userspace реализаций
 - Совместимость с существующей экосистемой
 
-При правильной реализации, ocserv-modern сможет конкурировать с коммерческими решениями по производительности, превосходя их по открытости и гибкости.
+При правильной реализации, wolfguard сможет конкурировать с коммерческими решениями по производительности, превосходя их по открытости и гибкости.
 
 ## Приложение A: Сравнительная таблица VPN решений
 
-| Характеристика | ocserv (текущий) | WireGuard | Lightway | CloudFlare | OpenVPN 3 | ocserv-modern (план) |
+| Характеристика | ocserv (текущий) | WireGuard | Lightway | CloudFlare | OpenVPN 3 | wolfguard (план) |
 |----------------|------------------|-----------|----------|------------|-----------|---------------------|
 | Язык | C | C (kernel), Go/Rust (userspace) | C → Rust | Go/Rust | C++20 | C23 |
 | Архитектура | Process per user | Kernel threads / Event-driven | Event-driven | Event-driven | Multi-threaded | Event-driven + Workers |

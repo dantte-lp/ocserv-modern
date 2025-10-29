@@ -2,7 +2,7 @@
 
 **Date**: 2025-10-29
 **Test Environment**: Oracle Linux 10 (OL10), GCC 14.2.1, Podman rootless container
-**Container Image**: localhost/ocserv-modern-dev:latest
+**Container Image**: localhost/wolfguard-dev:latest
 **Tested By**: Claude Code AI Assistant
 
 ---
@@ -109,7 +109,7 @@ $ pkg-config --modversion wolfssl
 **Critical Notes**:
 - ⚠️ **LICENSE CHANGE**: wolfSSL v5.8.2-stable uses **GPLv3** (changed from GPLv2)
   - Documented in ISSUE-001
-  - Requires compatibility verification with ocserv-modern GPLv2 license
+  - Requires compatibility verification with wolfguard GPLv2 license
 - Verbose debug logging overwhelming in PoC tests
   - Future work: Add logging level control
 
@@ -305,7 +305,7 @@ chmod 0440 /etc/sudoers.d/developer
 ## Test Methodology
 
 ### Environment Setup
-1. Built `localhost/ocserv-modern-dev:latest` container from Oracle Linux 10
+1. Built `localhost/wolfguard-dev:latest` container from Oracle Linux 10
 2. Installed updated libraries via buildah/podman build process
 3. Ran tests inside container with rootless permissions
 

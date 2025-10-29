@@ -2,7 +2,7 @@ name: Development CI
 
 # Optimized development workflow for fast feedback
 # Target: < 15 minutes for full pipeline
-# Designed for ocserv-modern C23 project with dual TLS backends
+# Designed for wolfguard C23 project with dual TLS backends
 
 on:
   push:

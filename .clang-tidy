@@ -1,4 +1,4 @@
-# clang-tidy configuration for ocserv-modern
+# clang-tidy configuration for wolfguard
 # Comprehensive static analysis for C23 code
 
 ---

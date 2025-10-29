@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# inspect-images.sh - Inspect all ocserv-modern images using Skopeo
+# inspect-images.sh - Inspect all wolfguard images using Skopeo
 # Provides detailed information about built images
 
 # Color output
@@ -23,13 +23,13 @@ log_section() {
 
 # Images to inspect
 IMAGES=(
-    "localhost/ocserv-modern-dev:latest"
-    "localhost/ocserv-modern-test:latest"
-    "localhost/ocserv-modern-build:latest"
-    "localhost/ocserv-modern-ci:latest"
+    "localhost/wolfguard-dev:latest"
+    "localhost/wolfguard-test:latest"
+    "localhost/wolfguard-build:latest"
+    "localhost/wolfguard-ci:latest"
 )
 
-log_section "Inspecting ocserv-modern Container Images"
+log_section "Inspecting wolfguard Container Images"
 
 for IMAGE in "${IMAGES[@]}"; do
     log_section "Image: $IMAGE"

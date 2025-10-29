@@ -1,4 +1,4 @@
-# TODO Tracking - ocserv-modern
+# TODO Tracking - wolfguard
 
 **Last Updated**: 2025-10-29 (Evening Update - Sprint 2 Continuation)
 **Current Sprint**: Sprint 2 (Development Tools & wolfSSL Integration)
@@ -7,7 +7,7 @@
 **Current Branch**: master
 **Latest Commit**: 61e6cea - docs(architecture): Document TLS version refactoring
 
-**NOTE**: This file tracks Sprint 2 details. For complete project tracking, see `/opt/projects/repositories/ocserv-modern/TODO.md`
+**NOTE**: This file tracks Sprint 2 details. For complete project tracking, see `/opt/projects/repositories/wolfguard/TODO.md`
 
 ---
 
@@ -23,7 +23,7 @@
 
 ### v2.0.0 - Major Refactoring with wolfSSL (Target: Q3 2026)
 
-This is the first major release of ocserv-modern, representing a complete migration from GnuTLS to wolfSSL native API with modern C library stack.
+This is the first major release of wolfguard, representing a complete migration from GnuTLS to wolfSSL native API with modern C library stack.
 
 **Status**: Planning and Setup Phase
 **Expected Timeline**: 50-70 weeks (realistic estimate per critical analysis)
@@ -126,7 +126,7 @@ This is the first major release of ocserv-modern, representing a complete migrat
   - Debug builds now compile without errors
 
 **Library Compatibility Testing** (8 SP - COMPLETED with notes)
-- [x] **Container image built successfully**: `localhost/ocserv-modern-dev:latest`
+- [x] **Container image built successfully**: `localhost/wolfguard-dev:latest`
 - [x] **Library versions confirmed**:
   - CMake 3.30.5 ✅
   - GCC 14.2.1 ✅
@@ -720,7 +720,7 @@ Key decisions will be tracked here as the project progresses.
 
 ### Overview
 
-The ocserv-improvements repository tracks **119 upstream issues** from gitlab.com/openconnect/ocserv with comprehensive analysis and prioritization. These issues represent real-world bugs, security vulnerabilities, and feature requests that should be considered during the ocserv-modern refactoring.
+The ocserv-improvements repository tracks **119 upstream issues** from gitlab.com/openconnect/ocserv with comprehensive analysis and prioritization. These issues represent real-world bugs, security vulnerabilities, and feature requests that should be considered during the wolfguard refactoring.
 
 ### Critical Security Issues (Must Address)
 
@@ -922,10 +922,10 @@ ExpressVPN's **Lightway** is a modern VPN protocol built on wolfSSL, designed as
 - [ ] Study Rust implementation and documentation
   - [ ] Read design documentation
   - [ ] Understand architectural decisions
-  - [ ] Extract best practices applicable to ocserv-modern
+  - [ ] Extract best practices applicable to wolfguard
 
 - [ ] Evaluate integration opportunities
-  - [ ] Could ocserv-modern support Lightway as alternative protocol?
+  - [ ] Could wolfguard support Lightway as alternative protocol?
   - [ ] Are there wolfSSL usage patterns we should adopt?
   - [ ] Can we reuse any abstraction layers?
   - [ ] Compatibility considerations with Cisco ecosystem
@@ -1006,7 +1006,7 @@ ExpressVPN's **Lightway** is a modern VPN protocol built on wolfSSL, designed as
 **DevOps Lead**: TBD
 
 **Mailing List**: ocserv-dev@lists.infradead.org
-**GitHub**: https://github.com/dantte-lp/ocserv-modern
+**GitHub**: https://github.com/dantte-lp/wolfguard
 **Discord**: TBD
 
 ---

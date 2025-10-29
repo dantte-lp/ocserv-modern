@@ -1,6 +1,6 @@
 # Architecture and Technical Decisions Log
 
-**Project**: ocserv-modern
+**Project**: wolfguard
 **Purpose**: Document significant technical and architectural decisions
 
 ---

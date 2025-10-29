@@ -1,6 +1,6 @@
-# Product Backlog - ocserv-modern
+# Product Backlog - wolfguard
 
-**Project**: ocserv-modern v2.0.0
+**Project**: wolfguard v2.0.0
 **Product Owner**: TBD
 **Last Updated**: 2025-10-29
 
@@ -318,7 +318,7 @@ Validate 100% compatibility with Cisco Secure Client 5.x and newer.
 **Sprint**: Sprint 11
 
 **Description**:
-Test ocserv-modern on all supported platforms to ensure portability.
+Test wolfguard on all supported platforms to ensure portability.
 
 **Acceptance Criteria**:
 - [ ] Ubuntu 22.04, 24.04 tested
@@ -443,7 +443,7 @@ Release beta and RC versions for public testing.
 **Sprint**: Sprint 17
 
 **Description**:
-Release ocserv-modern v2.0.0 stable with all packages and announcements.
+Release wolfguard v2.0.0 stable with all packages and announcements.
 
 **Acceptance Criteria**:
 - [ ] v2.0.0 tag created

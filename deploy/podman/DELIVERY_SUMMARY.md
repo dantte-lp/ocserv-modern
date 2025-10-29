@@ -2,10 +2,10 @@
 
 ## Overview
 
-Production-grade containerized development environment for ocserv-modern has been successfully created using Podman, Buildah, Skopeo, and crun.
+Production-grade containerized development environment for wolfguard has been successfully created using Podman, Buildah, Skopeo, and crun.
 
 **Date**: 2025-10-29  
-**Project**: ocserv-modern v2.0.0-alpha.1  
+**Project**: wolfguard v2.0.0-alpha.1  
 **Infrastructure Version**: 1.0
 
 ---
@@ -14,7 +14,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 1. Buildah Build Scripts (4 files)
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/scripts/`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/scripts/`
 
 | Script | Purpose | Lines | Build Time | Image Size |
 |--------|---------|-------|------------|------------|
@@ -32,7 +32,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 2. Podman Compose Configuration
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/compose.yaml`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/compose.yaml`
 
 **Services**: 5 (dev, test, build, ci, docs)  
 **Volumes**: 4 named volumes  
@@ -47,7 +47,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 3. Makefile
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/Makefile`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/Makefile`
 
 **Targets**: 40+ commands organized in categories:
 - Build (build-all, build-dev, build-test, build-build, build-ci)
@@ -61,7 +61,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 4. Configuration Files (3 files)
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/config/`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/config/`
 
 | File | Purpose | Key Settings |
 |------|---------|--------------|
@@ -71,7 +71,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 5. Skopeo Image Management Scripts (2 files)
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/scripts/`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/scripts/`
 
 | Script | Purpose | Features |
 |--------|---------|----------|
@@ -80,7 +80,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 6. Volume Management Scripts (2 files)
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/scripts/`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/scripts/`
 
 | Script | Purpose | Features |
 |--------|---------|----------|
@@ -95,7 +95,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 7. Helper Scripts (2 files)
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/scripts/`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/scripts/`
 
 | Script | Purpose | Checks |
 |--------|---------|--------|
@@ -104,7 +104,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 8. Documentation (4 files)
 
-**Location**: `/opt/projects/repositories/ocserv-modern/deploy/podman/`
+**Location**: `/opt/projects/repositories/wolfguard/deploy/podman/`
 
 | Document | Purpose | Size | Topics |
 |----------|---------|------|--------|
@@ -115,7 +115,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 
 ### 9. GitHub Actions Workflow
 
-**Location**: `/opt/projects/repositories/ocserv-modern/.github/workflows/containers.yml`
+**Location**: `/opt/projects/repositories/wolfguard/.github/workflows/containers.yml`
 
 **Jobs**: 9
 1. verify-setup - Verify Podman installation
@@ -156,7 +156,7 @@ Production-grade containerized development environment for ocserv-modern has bee
 ## File Structure
 
 ```
-/opt/projects/repositories/ocserv-modern/
+/opt/projects/repositories/wolfguard/
 ├── .github/
 │   └── workflows/
 │       └── containers.yml          # GitHub Actions workflow
@@ -271,7 +271,7 @@ LDFLAGS="-Wl,-z,relro -Wl,-z,now"
 
 ```bash
 # Navigate to directory
-cd /opt/projects/repositories/ocserv-modern/deploy/podman
+cd /opt/projects/repositories/wolfguard/deploy/podman
 
 # Verify prerequisites
 ./scripts/verify-rootless.sh
@@ -347,7 +347,7 @@ make help
 **wolfSSL v5.8.2 uses GPLv3 license (changed from GPLv2 in earlier versions)**
 
 **Impact**:
-- ocserv-modern is licensed under GPLv2+
+- wolfguard is licensed under GPLv2+
 - wolfSSL GPLv3 is compatible with GPLv2+ (can be distributed as GPLv3)
 - However, verify your use case and distribution requirements
 
@@ -414,7 +414,7 @@ make inspect-all
 2. **Documentation**: Read `README.md`
 3. **Troubleshooting**: Check `docs/TROUBLESHOOTING.md`
 4. **Architecture**: Review `docs/CONTAINER_ARCHITECTURE.md`
-5. **Issues**: https://github.com/dantte-lp/ocserv-modern/issues
+5. **Issues**: https://github.com/dantte-lp/wolfguard/issues
 
 ### Maintenance Tasks
 - **Weekly**: Run `make prune` to clean up unused resources
@@ -435,7 +435,7 @@ make inspect-all
 
 ## Conclusion
 
-A complete, production-grade Podman container infrastructure has been delivered for ocserv-modern, meeting all specified requirements:
+A complete, production-grade Podman container infrastructure has been delivered for wolfguard, meeting all specified requirements:
 
 ✅ **Podman-First**: No Docker dependencies  
 ✅ **Rootless**: Security by default  
@@ -452,6 +452,6 @@ The infrastructure is ready for immediate use in development and can be deployed
 
 **Delivery Date**: 2025-10-29  
 **Delivered By**: Claude Code (Anthropic)  
-**Project**: ocserv-modern v2.0.0-alpha.1  
+**Project**: wolfguard v2.0.0-alpha.1  
 **Status**: ✅ COMPLETE
 

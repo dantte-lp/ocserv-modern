@@ -473,7 +473,7 @@ wolfSSL significantly outperforms GnuTLS:
 ## Next Steps (Sprint 2)
 
 ### 1. wolfSSL Integration (13 points)
-- Integrate wolfSSL as primary TLS backend into ocserv-modern
+- Integrate wolfSSL as primary TLS backend into wolfguard
 - Remove or make GnuTLS optional fallback
 - Update build system and configuration
 

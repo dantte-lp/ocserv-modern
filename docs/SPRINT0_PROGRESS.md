@@ -1,4 +1,4 @@
-# Sprint 0 Progress Report - ocserv-modern
+# Sprint 0 Progress Report - wolfguard
 
 **Date**: 2025-10-29
 **Sprint**: Sprint 0 (Project Setup and Analysis)

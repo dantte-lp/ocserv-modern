@@ -1,6 +1,6 @@
 # Container Architecture
 
-This document describes the design decisions, architecture, and rationale behind the ocserv-modern Podman container infrastructure.
+This document describes the design decisions, architecture, and rationale behind the wolfguard Podman container infrastructure.
 
 ## Table of Contents
 
@@ -88,15 +88,15 @@ We use a **multi-environment** approach instead of a single monolithic container
 ```
 registry.access.redhat.com/ubi9/ubi:latest
     │
-    ├─> ocserv-modern-dev:latest (500MB)
+    ├─> wolfguard-dev:latest (500MB)
     │       │
-    │       └─> ocserv-modern-test:latest (500MB)
+    │       └─> wolfguard-test:latest (500MB)
     │
     └─> registry.access.redhat.com/ubi9/ubi-minimal:latest
             │
-            └─> ocserv-modern-build:latest (200MB)
+            └─> wolfguard-build:latest (200MB)
                     │
-                    └─> ocserv-modern-ci:latest (200MB)
+                    └─> wolfguard-ci:latest (200MB)
 ```
 
 **Rationale**:
@@ -577,7 +577,7 @@ networks:
     external: true
 ```
 
-**When**: If ocserv-modern web UI is added
+**When**: If wolfguard web UI is added
 **Why**: Automatic HTTPS, service discovery
 
 ## Future Enhancements

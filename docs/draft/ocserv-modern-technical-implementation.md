@@ -1,4 +1,4 @@
-# Технический план реализации ocserv-modern
+# Технический план реализации wolfguard
 
 ## Executive Summary для GitHub README
 
@@ -26,9 +26,9 @@
 ### 1. Core Event Loop Architecture
 
 ```c
-// include/ocserv_modern.h
-#ifndef OCSERV_MODERN_H
-#define OCSERV_MODERN_H
+// include/wolfguard.h
+#ifndef WOLFGUARD_H
+#define WOLFGUARD_H
 
 #include <uv.h>
 #include <wolfssl/ssl.h>
@@ -159,14 +159,14 @@ struct ocserv_server {
     pthread_rwlock_t config_lock;
 };
 
-#endif // OCSERV_MODERN_H
+#endif // WOLFGUARD_H
 ```
 
 ### 2. Event Loop Implementation
 
 ```c
 // src/event_loop.c
-#include "ocserv_modern.h"
+#include "wolfguard.h"
 #include <mimalloc.h>
 
 // Per-worker event loop
@@ -249,7 +249,7 @@ static void conn_free(ocserv_connection_t *conn) {
 
 ```c
 // src/network_io.c
-#include "ocserv_modern.h"
+#include "wolfguard.h"
 #include <sys/sendfile.h>
 #include <sys/uio.h>
 
@@ -356,7 +356,7 @@ static void dtls_batch_send(ocserv_worker_t *worker) {
 
 ```c
 // src/crypto.c
-#include "ocserv_modern.h"
+#include "wolfguard.h"
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
 
@@ -438,7 +438,7 @@ static void tls_handshake_cb(uv_stream_t *stream,
 
 ```c
 // src/datapath.c
-#include "ocserv_modern.h"
+#include "wolfguard.h"
 #include <linux/if_tun.h>
 #include <sys/ioctl.h>
 
@@ -538,7 +538,7 @@ static int load_xdp_program(const char *ifname) {
 ### 6. Production Configuration
 
 ```toml
-# config/ocserv-modern.toml
+# config/wolfguard.toml
 
 [server]
 bind = "0.0.0.0"
@@ -585,7 +585,7 @@ log_file = "/var/log/ocserv/ocserv.log"
 ```cmake
 # CMakeLists.txt
 cmake_minimum_required(VERSION 3.28)
-project(ocserv-modern 
+project(wolfguard 
         VERSION 2.0.0
         LANGUAGES C)
 
@@ -627,10 +627,10 @@ set(SOURCES
 )
 
 # Main executable
-add_executable(ocserv-modern ${SOURCES})
+add_executable(wolfguard ${SOURCES})
 
 # Link libraries
-target_link_libraries(ocserv-modern
+target_link_libraries(wolfguard
     PRIVATE
         ${LIBUV_LIBRARIES}
         ${WOLFSSL_LIBRARIES}
@@ -641,7 +641,7 @@ target_link_libraries(ocserv-modern
 )
 
 # Include directories
-target_include_directories(ocserv-modern
+target_include_directories(wolfguard
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${LIBUV_INCLUDE_DIRS}
@@ -650,19 +650,19 @@ target_include_directories(ocserv-modern
 
 # Sanitizers
 if(ENABLE_ASAN)
-    target_compile_options(ocserv-modern PRIVATE -fsanitize=address)
-    target_link_options(ocserv-modern PRIVATE -fsanitize=address)
+    target_compile_options(wolfguard PRIVATE -fsanitize=address)
+    target_link_options(wolfguard PRIVATE -fsanitize=address)
 endif()
 
 if(ENABLE_UBSAN)
-    target_compile_options(ocserv-modern PRIVATE -fsanitize=undefined)
-    target_link_options(ocserv-modern PRIVATE -fsanitize=undefined)
+    target_compile_options(wolfguard PRIVATE -fsanitize=undefined)
+    target_link_options(wolfguard PRIVATE -fsanitize=undefined)
 endif()
 
 # Installation
-install(TARGETS ocserv-modern DESTINATION bin)
-install(FILES config/ocserv-modern.toml DESTINATION /etc/ocserv)
-install(FILES systemd/ocserv-modern.service 
+install(TARGETS wolfguard DESTINATION bin)
+install(FILES config/wolfguard.toml DESTINATION /etc/ocserv)
+install(FILES systemd/wolfguard.service 
         DESTINATION /lib/systemd/system)
 
 # Testing
@@ -682,7 +682,7 @@ endif()
 // tests/benchmark.c
 #include <criterion/criterion.h>
 #include <criterion/parameterized.h>
-#include "ocserv_modern.h"
+#include "wolfguard.h"
 
 // Benchmark connection establishment
 Test(performance, connection_rate) {
@@ -835,7 +835,7 @@ jobs:
           afl-fuzz -i /src/tests/fuzz/input \
                    -o /src/tests/fuzz/output \
                    -t 5000 \
-                   -- /src/build/ocserv-modern-fuzz
+                   -- /src/build/wolfguard-fuzz
 ```
 
 ### 10. Deployment и Monitoring
@@ -849,8 +849,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ocserv-modern:latest
-    container_name: ocserv-modern
+    image: wolfguard:latest
+    container_name: wolfguard
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -949,7 +949,7 @@ volumes:
 
 ## Заключение
 
-Проект ocserv-modern представляет собой амбициозную, но реалистичную модернизацию ocserv. Используя проверенные технологии (libuv, wolfSSL) и современные подходы (event-driven, zero-copy), можно достичь производительности на уровне лучших коммерческих решений, сохранив открытость и гибкость.
+Проект wolfguard представляет собой амбициозную, но реалистичную модернизацию ocserv. Используя проверенные технологии (libuv, wolfSSL) и современные подходы (event-driven, zero-copy), можно достичь производительности на уровне лучших коммерческих решений, сохранив открытость и гибкость.
 
 Ключевые факторы успеха:
 1. **Постепенная миграция** - минимизация рисков
@@ -957,9 +957,9 @@ volumes:
 3. **Безопасность by design** - modern C practices + audits
 4. **Активное сообщество** - open development process
 
-При правильной реализации, ocserv-modern может стать de facto стандартом для enterprise OpenConnect deployments.
+При правильной реализации, wolfguard может стать de facto стандартом для enterprise OpenConnect deployments.
 
 ---
 
-*Документ подготовлен для https://github.com/dantte-lp/ocserv-modern*
+*Документ подготовлен для https://github.com/dantte-lp/wolfguard*
 *Версия: 1.0.0 | Дата: 2025-01-14*

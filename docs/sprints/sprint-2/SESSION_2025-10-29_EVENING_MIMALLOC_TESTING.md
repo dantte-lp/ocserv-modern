@@ -12,7 +12,7 @@
 
 Completed comprehensive testing of mimalloc v3.1.5 migration (v2.2.4 → v3.1.5) across 5 phases: smoke tests, memory leak detection, stress testing, performance benchmarking, and long-running stability. **All tests PASSED** with perfect results (zero leaks, zero errors, zero crashes).
 
-**GO/NO-GO Decision: ✅ GO APPROVED** - mimalloc v3.1.5 validated for production use in ocserv-modern v2.0.0.
+**GO/NO-GO Decision: ✅ GO APPROVED** - mimalloc v3.1.5 validated for production use in wolfguard v2.0.0.
 
 ---
 

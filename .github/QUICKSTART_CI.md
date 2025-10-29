@@ -1,6 +1,6 @@
-# Quick Start: CI/CD for ocserv-modern
+# Quick Start: CI/CD for wolfguard
 
-This guide helps you quickly understand and use the CI/CD pipelines for ocserv-modern.
+This guide helps you quickly understand and use the CI/CD pipelines for wolfguard.
 
 ## TL;DR
 
@@ -146,13 +146,13 @@ git push origin main
 
 ```bash
 # After successful main branch push
-docker pull ghcr.io/dantte-lp/ocserv-modern-dev:latest
-docker pull ghcr.io/dantte-lp/ocserv-modern-dev:<commit-sha>
+docker pull ghcr.io/dantte-lp/wolfguard-dev:latest
+docker pull ghcr.io/dantte-lp/wolfguard-dev:<commit-sha>
 
 # Run development container
 docker run -it --rm \
-  -v /opt/projects/repositories/ocserv-modern:/workspace:Z \
-  ghcr.io/dantte-lp/ocserv-modern-dev:latest
+  -v /opt/projects/repositories/wolfguard:/workspace:Z \
+  ghcr.io/dantte-lp/wolfguard-dev:latest
 ```
 
 ## Build System Cheat Sheet
@@ -212,13 +212,13 @@ gh runner list
 **Solution**: Use the dev container
 ```bash
 # Pull the CI container
-docker pull ghcr.io/dantte-lp/ocserv-modern-dev:latest
+docker pull ghcr.io/dantte-lp/wolfguard-dev:latest
 
 # Run tests in container
 docker run --rm \
   -v $PWD:/workspace:Z \
   -w /workspace \
-  ghcr.io/dantte-lp/ocserv-modern-dev:latest \
+  ghcr.io/dantte-lp/wolfguard-dev:latest \
   meson test -C build --verbose
 ```
 

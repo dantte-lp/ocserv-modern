@@ -1,5 +1,5 @@
-# Makefile for ocserv-modern
-# Copyright (C) 2025 ocserv-modern Contributors
+# Makefile for wolfguard
+# Copyright (C) 2025 wolfguard Contributors
 #
 # Build system for TLS abstraction layer with dual backend support
 
@@ -188,7 +188,7 @@ clean:
 	@rm -f poc-client-gnutls poc-client-wolfssl
 
 help:
-	@echo "ocserv-modern Build System"
+	@echo "wolfguard Build System"
 	@echo ""
 	@echo "Targets:"
 	@echo "  all              Build backend library (default: gnutls)"
@@ -226,8 +226,8 @@ install: all
 	@install -d $(LIBDIR)
 	@install -m 644 $(BACKEND_LIB) $(LIBDIR)/
 	@echo "  INSTALL $(INCLUDEDIR)/tls_abstract.h"
-	@install -d $(INCLUDEDIR)/ocserv-modern
-	@install -m 644 src/crypto/tls_abstract.h $(INCLUDEDIR)/ocserv-modern/
+	@install -d $(INCLUDEDIR)/wolfguard
+	@install -m 644 src/crypto/tls_abstract.h $(INCLUDEDIR)/wolfguard/
 
 # ============================================================================
 # Dependency Tracking

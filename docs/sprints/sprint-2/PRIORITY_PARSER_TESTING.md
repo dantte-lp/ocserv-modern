@@ -21,7 +21,7 @@ Comprehensive unit tests for the priority string parser have been successfully c
 ## Test Suite Overview
 
 ### Test File
-- **Location**: `/opt/projects/repositories/ocserv-modern/tests/unit/test_priority_parser.c`
+- **Location**: `/opt/projects/repositories/wolfguard/tests/unit/test_priority_parser.c`
 - **Lines of Code**: 711 lines
 - **Test Framework**: Custom lightweight framework (consistent with existing tests)
 - **Language Standard**: C23 (ISO/IEC 9899:2024)
@@ -568,14 +568,14 @@ SUCCESS: All tests passed!
 ## References
 
 ### Code
-- **Test File**: `/opt/projects/repositories/ocserv-modern/tests/unit/test_priority_parser.c`
-- **Implementation**: `/opt/projects/repositories/ocserv-modern/src/crypto/priority_parser.{c,h}`
-- **Build System**: `/opt/projects/repositories/ocserv-modern/Makefile`
+- **Test File**: `/opt/projects/repositories/wolfguard/tests/unit/test_priority_parser.c`
+- **Implementation**: `/opt/projects/repositories/wolfguard/src/crypto/priority_parser.{c,h}`
+- **Build System**: `/opt/projects/repositories/wolfguard/Makefile`
 
 ### Documentation
-- **Architecture**: `/opt/projects/repositories/ocserv-modern/docs/architecture/PRIORITY_STRING_PARSER.md`
-- **Sprint Tracking**: `/opt/projects/repositories/ocserv-modern/docs/todo/CURRENT.md`
-- **Root TODO**: `/opt/projects/repositories/ocserv-modern/TODO.md`
+- **Architecture**: `/opt/projects/repositories/wolfguard/docs/architecture/PRIORITY_STRING_PARSER.md`
+- **Sprint Tracking**: `/opt/projects/repositories/wolfguard/docs/todo/CURRENT.md`
+- **Root TODO**: `/opt/projects/repositories/wolfguard/TODO.md`
 
 ### Commits
 - **Test Creation**: `d42bb53` - test(crypto): Add comprehensive priority parser unit tests

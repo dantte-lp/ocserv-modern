@@ -1,8 +1,8 @@
-# CMakeLists.txt for ocserv-modern
+# CMakeLists.txt for wolfguard
 # Modern C23 VPN server with TLS abstraction layer
 cmake_minimum_required(VERSION 3.20)
 
-project(ocserv-modern
+project(wolfguard
     VERSION 2.0.0
     DESCRIPTION "Modern C23 VPN server with TLS abstraction layer"
     LANGUAGES C
@@ -107,7 +107,7 @@ install(TARGETS tls_abstract
 )
 
 install(FILES src/crypto/tls_abstract.h
-    DESTINATION include/ocserv-modern
+    DESTINATION include/wolfguard
 )
 
 # Proof of Concept binaries
@@ -214,7 +214,7 @@ add_custom_target(cppcheck
 
 # Print configuration summary
 message(STATUS "")
-message(STATUS "ocserv-modern Configuration Summary")
+message(STATUS "wolfguard Configuration Summary")
 message(STATUS "===================================")
 message(STATUS "Version:           ${PROJECT_VERSION}")
 message(STATUS "Build type:        ${CMAKE_BUILD_TYPE}")

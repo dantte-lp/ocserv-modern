@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# TLS Backend Benchmark Script - ocserv-modern
+# TLS Backend Benchmark Script - wolfguard
 #
-# Copyright (C) 2025 ocserv-modern Contributors
+# Copyright (C) 2025 wolfguard Contributors
 #
 # This script benchmarks the TLS abstraction layer with different backends
 # and collects comprehensive performance metrics for comparison.

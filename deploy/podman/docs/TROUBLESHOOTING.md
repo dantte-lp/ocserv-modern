@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues and solutions for the ocserv-modern Podman container infrastructure.
+Common issues and solutions for the wolfguard Podman container infrastructure.
 
 ## Table of Contents
 
@@ -32,7 +32,7 @@ make info
 podman ps -a
 
 # Check images
-podman images | grep ocserv-modern
+podman images | grep wolfguard
 
 # Check logs
 podman logs <container-name>
@@ -192,12 +192,12 @@ podman logs <container-id>
 
 2. Run interactively:
 ```bash
-podman run -it --rm localhost/ocserv-modern-dev:latest /bin/bash
+podman run -it --rm localhost/wolfguard-dev:latest /bin/bash
 ```
 
 3. Check command:
 ```bash
-podman inspect localhost/ocserv-modern-dev:latest | jq '.[0].Config.Cmd'
+podman inspect localhost/wolfguard-dev:latest | jq '.[0].Config.Cmd'
 ```
 
 4. Override command:
@@ -253,18 +253,18 @@ podman inspect <container-name> | jq '.[0].Mounts'
 
 2. Verify SELinux context:
 ```bash
-ls -Zd /opt/projects/repositories/ocserv-modern
+ls -Zd /opt/projects/repositories/wolfguard
 ```
 
 3. Fix ownership:
 ```bash
 # On host
-sudo chown -R $USER:$USER /opt/projects/repositories/ocserv-modern
+sudo chown -R $USER:$USER /opt/projects/repositories/wolfguard
 ```
 
 4. Relabel for SELinux:
 ```bash
-chcon -R -t container_file_t /opt/projects/repositories/ocserv-modern
+chcon -R -t container_file_t /opt/projects/repositories/wolfguard
 ```
 
 5. Check container user:
@@ -333,7 +333,7 @@ volumes:
 
 4. Relabel directory:
 ```bash
-chcon -R -t container_file_t /opt/projects/repositories/ocserv-modern
+chcon -R -t container_file_t /opt/projects/repositories/wolfguard
 ```
 
 5. Generate policy (last resort):
@@ -370,7 +370,7 @@ sudo dnf reinstall container-selinux
 
 4. Reset file contexts:
 ```bash
-sudo restorecon -R /opt/projects/repositories/ocserv-modern
+sudo restorecon -R /opt/projects/repositories/wolfguard
 ```
 
 ## Network Issues
@@ -444,15 +444,15 @@ podman network inspect ocserv-net
 
 **Symptom**:
 ```
-Error: volume ocserv-modern_dev-home not found
+Error: volume wolfguard_dev-home not found
 ```
 
 **Solutions**:
 
 1. Create volumes:
 ```bash
-podman volume create ocserv-modern_dev-home
-podman volume create ocserv-modern_build-cache
+podman volume create wolfguard_dev-home
+podman volume create wolfguard_build-cache
 ```
 
 2. Or use compose:
@@ -487,7 +487,7 @@ sudo ./scripts/backup-volumes.sh
 
 3. Fix volume ownership:
 ```bash
-podman volume inspect ocserv-modern_dev-home
+podman volume inspect wolfguard_dev-home
 # Check Mountpoint, then:
 sudo chown -R $USER:$USER <mountpoint>
 ```
@@ -559,7 +559,7 @@ buildah commit --rm --squash $container
 
 4. Pre-pull images:
 ```bash
-podman pull localhost/ocserv-modern-dev:latest
+podman pull localhost/wolfguard-dev:latest
 ```
 
 ## Advanced Debugging
@@ -607,7 +607,7 @@ buildah rm $container
 
 ```bash
 # Show image layers
-podman history localhost/ocserv-modern-dev:latest
+podman history localhost/wolfguard-dev:latest
 
 # Export image filesystem
 podman export <container-name> > filesystem.tar

@@ -23,9 +23,9 @@ Comprehensive documentation consolidation and strategic planning updates to inte
 ### 1. Documentation Study and Analysis
 
 **Draft Documents Analyzed**:
-- `ocserv-modern-architecture-research.md` (Russian): VPN architecture patterns, event-driven design
-- `ocserv-modern-c-libraries.md` (Russian): Pure C library recommendations (no C++ dependencies)
-- `ocserv-modern-technical-implementation.md` (Russian): Callback-based wolfSSL, zero-copy networking
+- `wolfguard-architecture-research.md` (Russian): VPN architecture patterns, event-driven design
+- `wolfguard-c-libraries.md` (Russian): Pure C library recommendations (no C++ dependencies)
+- `wolfguard-technical-implementation.md` (Russian): Callback-based wolfSSL, zero-copy networking
 - `ocserv-refactoring-plan-networking.md` (Russian): Multi-queue TUN, eBPF/XDP, performance tuning
 - `ocserv-refactoring-plan-rest-api.md` (Russian): REST + WebSocket hybrid, JWT + mTLS security
 - `ocserv-refactoring-plan-general.md` (Russian): General strategy and timeline
@@ -46,7 +46,7 @@ Comprehensive documentation consolidation and strategic planning updates to inte
 
 ### 2. REFACTORING_PLAN.md Updates
 
-**File**: `/opt/projects/repositories/ocserv-modern/docs/REFACTORING_PLAN.md`
+**File**: `/opt/projects/repositories/wolfguard/docs/REFACTORING_PLAN.md`
 
 **Changes**:
 1. Updated executive summary with Sprint 2 status (82% complete)
@@ -75,7 +75,7 @@ Comprehensive documentation consolidation and strategic planning updates to inte
 
 ### 3. PROTOCOL_REFERENCE.md Enhancements
 
-**File**: `/opt/projects/repositories/ocserv-modern/docs/architecture/PROTOCOL_REFERENCE.md`
+**File**: `/opt/projects/repositories/wolfguard/docs/architecture/PROTOCOL_REFERENCE.md`
 
 **Changes**:
 1. Added cryptographic implementation analysis section:
@@ -100,7 +100,7 @@ Comprehensive documentation consolidation and strategic planning updates to inte
 
 ### 4. New Architecture Document: MODERN_ARCHITECTURE.md
 
-**File**: `/opt/projects/repositories/ocserv-modern/docs/architecture/MODERN_ARCHITECTURE.md`
+**File**: `/opt/projects/repositories/wolfguard/docs/architecture/MODERN_ARCHITECTURE.md`
 
 **Content** (659 lines):
 1. **Architecture Philosophy**: Event-driven, pure C, zero-copy, NUMA-aware, callback-based crypto
@@ -127,7 +127,7 @@ Comprehensive documentation consolidation and strategic planning updates to inte
 
 ### 5. CURRENT.md Progress Update
 
-**File**: `/opt/projects/repositories/ocserv-modern/docs/todo/CURRENT.md`
+**File**: `/opt/projects/repositories/wolfguard/docs/todo/CURRENT.md`
 
 **Changes**:
 1. Updated progress: 17/29 SP → 24/29 SP (59% → 82%)
@@ -153,9 +153,9 @@ Comprehensive documentation consolidation and strategic planning updates to inte
 ### 6. Draft and Cisco Documentation Addition
 
 **Files Added**:
-- `docs/draft/ocserv-modern-architecture-research.md` (Russian)
-- `docs/draft/ocserv-modern-c-libraries.md` (Russian)
-- `docs/draft/ocserv-modern-technical-implementation.md` (Russian)
+- `docs/draft/wolfguard-architecture-research.md` (Russian)
+- `docs/draft/wolfguard-c-libraries.md` (Russian)
+- `docs/draft/wolfguard-technical-implementation.md` (Russian)
 - `docs/draft/ocserv-refactoring-plan-general.md` (Russian)
 - `docs/draft/ocserv-refactoring-plan-networking.md` (Russian)
 - `docs/draft/ocserv-refactoring-plan-rest-api.md` (Russian)
@@ -199,9 +199,9 @@ docs/
 │   ├── PRIORITY_STRING_PARSER.md         # Priority parser arch (existing)
 │   └── WOLFSSL_ECOSYSTEM.md              # wolfSSL integration (existing)
 ├── draft/                                 # Historical reference (NEW)
-│   ├── ocserv-modern-architecture-research.md
-│   ├── ocserv-modern-c-libraries.md
-│   ├── ocserv-modern-technical-implementation.md
+│   ├── wolfguard-architecture-research.md
+│   ├── wolfguard-c-libraries.md
+│   ├── wolfguard-technical-implementation.md
 │   ├── ocserv-refactoring-plan-general.md
 │   ├── ocserv-refactoring-plan-networking.md
 │   └── ocserv-refactoring-plan-rest-api.md
@@ -371,21 +371,21 @@ docs/
 ### Documents Analyzed
 
 **Draft Planning**:
-1. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-modern-architecture-research.md`
-2. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-modern-c-libraries.md`
-3. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-modern-technical-implementation.md`
-4. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-refactoring-plan-networking.md`
-5. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-refactoring-plan-rest-api.md`
+1. `/opt/projects/repositories/wolfguard/docs/draft/wolfguard-architecture-research.md`
+2. `/opt/projects/repositories/wolfguard/docs/draft/wolfguard-c-libraries.md`
+3. `/opt/projects/repositories/wolfguard/docs/draft/wolfguard-technical-implementation.md`
+4. `/opt/projects/repositories/wolfguard/docs/draft/ocserv-refactoring-plan-networking.md`
+5. `/opt/projects/repositories/wolfguard/docs/draft/ocserv-refactoring-plan-rest-api.md`
 
 **Cisco Documentation**:
-6. `/opt/projects/repositories/cisco-secure-client-docs/docs/protocol/crypto.md`
-7. `/opt/projects/repositories/cisco-secure-client-docs/docs/implementation/wolfssl.md`
-8. `/opt/projects/repositories/cisco-secure-client-docs/docs/protocol/authentication.md`
+6. `/opt/projects/repositories/wolfguard-docs/docs/protocol/crypto.md`
+7. `/opt/projects/repositories/wolfguard-docs/docs/implementation/wolfssl.md`
+8. `/opt/projects/repositories/wolfguard-docs/docs/protocol/authentication.md`
 
 **Existing Documentation**:
-9. `/opt/projects/repositories/ocserv-modern/docs/REFACTORING_PLAN.md`
-10. `/opt/projects/repositories/ocserv-modern/docs/architecture/PROTOCOL_REFERENCE.md`
-11. `/opt/projects/repositories/ocserv-modern/docs/todo/CURRENT.md`
+9. `/opt/projects/repositories/wolfguard/docs/REFACTORING_PLAN.md`
+10. `/opt/projects/repositories/wolfguard/docs/architecture/PROTOCOL_REFERENCE.md`
+11. `/opt/projects/repositories/wolfguard/docs/todo/CURRENT.md`
 
 ### Industry Research
 

@@ -1,4 +1,4 @@
-# Doxyfile for ocserv-modern
+# Doxyfile for wolfguard
 # API documentation configuration
 
 #---------------------------------------------------------------------------
@@ -6,7 +6,7 @@
 #---------------------------------------------------------------------------
 
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = "ocserv-modern"
+PROJECT_NAME           = "wolfguard"
 PROJECT_NUMBER         = "2.0.0-alpha.1"
 PROJECT_BRIEF          = "Modern C23 VPN server with TLS abstraction layer"
 PROJECT_LOGO           =

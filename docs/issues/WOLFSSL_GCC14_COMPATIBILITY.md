@@ -169,7 +169,7 @@ CFLAGS="-std=gnu11" ./configure ...
 
 **Configuration File**:
 ```dockerfile
-# /opt/projects/repositories/ocserv-modern/deploy/podman/Dockerfile.dev
+# /opt/projects/repositories/wolfguard/deploy/podman/Dockerfile.dev
 
 RUN cd /tmp && \
     wget https://github.com/wolfSSL/wolfssl/archive/refs/tags/v${WOLFSSL_VERSION}-stable.tar.gz && \
@@ -237,7 +237,7 @@ RUN cd /tmp && \
 **Test**: Verify wolfSSL builds successfully with GCC 14
 
 ```bash
-cd /opt/projects/repositories/ocserv-modern/deploy/podman
+cd /opt/projects/repositories/wolfguard/deploy/podman
 podman-compose build dev 2>&1 | grep -A5 -B5 "wolfssl"
 ```
 
@@ -352,9 +352,9 @@ ea0da29 - fix(docker): use -std=gnu11 for wolfSSL to support legacy register syn
 
 ### Internal Documentation
 
-- **Architecture**: `/opt/projects/repositories/ocserv-modern/docs/architecture/`
-- **Sprint Planning**: `/opt/projects/repositories/ocserv-modern/docs/sprints/sprint-2/`
-- **TODO Tracking**: `/opt/projects/repositories/ocserv-modern/docs/todo/CURRENT.md`
+- **Architecture**: `/opt/projects/repositories/wolfguard/docs/architecture/`
+- **Sprint Planning**: `/opt/projects/repositories/wolfguard/docs/sprints/sprint-2/`
+- **TODO Tracking**: `/opt/projects/repositories/wolfguard/docs/todo/CURRENT.md`
 
 ## Review History
 

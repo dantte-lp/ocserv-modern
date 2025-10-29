@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2025 ocserv-modern Contributors
+ * Copyright (C) 2025 wolfguard Contributors
  *
- * This file is part of ocserv-modern.
+ * This file is part of wolfguard.
  *
  * Unit Tests for GnuTLS Backend
  *

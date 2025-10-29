@@ -1,6 +1,6 @@
-# Современная архитектура VPN-серверов: стратегия рефакторинга ocserv-modern
+# Современная архитектура VPN-серверов: стратегия рефакторинга wolfguard
 
-**ExpressVPN Lightway с wolfSSL и DTLS 1.3 демонстрирует производственно-готовый подход, а CloudFlare полностью отказался от DTLS в пользу WireGuard и MASQUE.** Для ocserv-modern оптимальная стратегия — гибридный подход: инкрементальная модернизация на C23 с wolfSSL Native API, event-driven архитектурой и плагинной системой, обеспечивающая 2-3x прирост производительности при сохранении совместимости.
+**ExpressVPN Lightway с wolfSSL и DTLS 1.3 демонстрирует производственно-готовый подход, а CloudFlare полностью отказался от DTLS в пользу WireGuard и MASQUE.** Для wolfguard оптимальная стратегия — гибридный подход: инкрементальная модернизация на C23 с wolfSSL Native API, event-driven архитектурой и плагинной системой, обеспечивающая 2-3x прирост производительности при сохранении совместимости.
 
 ## Ключевые выводы исследования
 
@@ -22,9 +22,9 @@ Lightway демонстрирует sophisticated event-driven архитект�
 
 Производственные показатели впечатляют: **2.5x быстрее connection establishment**, 40% улучшение надежности, 2x прирост скорости на Rust-реализации (330 Mbps TCP на Aircove роутерах). Аудиты Cure53 и Praetorian подтвердили «high quality» кодовой базы и «good state of security» с минимальным числом findings.
 
-### Паттерны для ocserv-modern
+### Паттерны для wolfguard
 
-Callback-based архитектура критична для ocserv-modern: **деплой от gnutls/OpenSSL event models**, callback интерфейсы для network I/O, интеграция с существующей epoll/libevent инфраструктурой. SSL Context Separation обеспечивает глобальный config vs per-connection state для эффективного resource management и multi-worker архитектуры через структуры `ocserv_ssl_ctx` и `ocserv_conn`.
+Callback-based архитектура критична для wolfguard: **деплой от gnutls/OpenSSL event models**, callback интерфейсы для network I/O, интеграция с существующей epoll/libevent инфраструктурой. SSL Context Separation обеспечивает глобальный config vs per-connection state для эффективного resource management и multi-worker архитектуры через структуры `ocserv_ssl_ctx` и `ocserv_conn`.
 
 Plugin Framework позволяет кастомную аутентификацию, packet filtering и логирование без модификации ядра. State Machine Design с явными state transitions упрощает debugging DTLS handshake и reconnection handling. Отсутствие внутренних таймеров — host контролирует event loop через nudge/timeout callbacks, что критично для интеграции с существующей инфраструктурой ocserv.
 
@@ -218,7 +218,7 @@ Azure LB: Client IP (2-tuple) or Client IP + Protocol (3-tuple), F5 BIG-IP: Pers
 
 ### Гибридный подход: оптимальная стратегия
 
-**Рекомендуемый путь для ocserv-modern**: начать с эволюционной модернизации на C23 + wolfSSL + libuv, **delivering 70% benefits с 30% effort**, затем selectively rewrite critical components в Rust для maximum security. Timeline: Months 1-6 (C23 modernization), Months 7-12 (production validation), Months 13-24 (selective Rust adoption).
+**Рекомендуемый путь для wolfguard**: начать с эволюционной модернизации на C23 + wolfSSL + libuv, **delivering 70% benefits с 30% effort**, затем selectively rewrite critical components в Rust для maximum security. Timeline: Months 1-6 (C23 modernization), Months 7-12 (production validation), Months 13-24 (selective Rust adoption).
 
 **Phase 1: C23 Foundation (Months 1-3)**
 - Migrate event loop: libev → libuv
@@ -259,7 +259,7 @@ Azure LB: Client IP (2-tuple) or Client IP + Protocol (3-tuple), F5 BIG-IP: Pers
 
 ## 8. Конкретные архитектурные рекомендации
 
-### Recommended architecture для ocserv-modern
+### Recommended architecture для wolfguard
 
 **Core Design Philosophy**: Simplicity inspired by WireGuard, modularity from StrongSwan, safety from OpenVPN 3.x patterns, production validation from Lightway experience. Target: **100K concurrent connections per server, 10+ Gbps throughput, \<5ms added latency, FIPS 140-3 compliance**.
 
@@ -333,7 +333,7 @@ add_subdirectory(mimalloc)
 add_subdirectory(llhttp)
 
 # Link
-target_link_libraries(ocserv-modern
+target_link_libraries(wolfguard
     PRIVATE libuv wolfssl mimalloc llhttp cjson
 )
 ```
@@ -348,9 +348,9 @@ sysctl -w net.ipv4.tcp_congestion_control=bbr
 
 # NUMA binding (dual-socket)
 numactl --cpunodebind=0 --membind=0 \
-    ./ocserv-modern --workers=16 --config=ocserv.conf &
+    ./wolfguard --workers=16 --config=ocserv.conf &
 numactl --cpunodebind=1 --membind=1 \
-    ./ocserv-modern --workers=16 --config=ocserv.conf &
+    ./wolfguard --workers=16 --config=ocserv.conf &
 
 # Load balancing (HAProxy)
 frontend vpn_frontend
@@ -412,7 +412,7 @@ wolfSSL_CTX_UseSupportedCurve(ctx, WOLFSSL_ML_KEM_768);
 
 ### Оптимальная стратегия: гибридная модернизация
 
-Для проекта ocserv-modern **рекомендуется эволюционный подход с селективным использованием Rust**. Начните с обновления архитектуры на C23 + wolfSSL Native API + libuv, что обеспечит 70% преимуществ при 30% усилий, затем постепенно мигрируйте критические компоненты на Rust для максимальной безопасности.
+Для проекта wolfguard **рекомендуется эволюционный подход с селективным использованием Rust**. Начните с обновления архитектуры на C23 + wolfSSL Native API + libuv, что обеспечит 70% преимуществ при 30% усилий, затем постепенно мигрируйте критические компоненты на Rust для максимальной безопасности.
 
 **Immediate priorities (3-6 months)**:
 1. **Event loop migration**: libev → libuv для cross-platform support
@@ -447,4 +447,4 @@ wolfSSL_CTX_UseSupportedCurve(ctx, WOLFSSL_ML_KEM_768);
 
 **Break-even**: 12-18 months from project start. **Net present value**: positive at 5-year horizon assuming enterprise adoption. **Risk mitigation**: incremental approach reduces «big bang» deployment risk, backward compatibility maintains existing user base, production validation at each phase.
 
-Архитектура 2025 года требует холистического подхода: modern kernel features (io_uring, eBPF), intelligent memory management, CPU affinity optimization, horizontal scalability. Shift от thread-per-connection к event-driven, coupled с zero-copy techniques, обеспечивает 2-3x performance improvements maintaining security. **ocserv-modern может достичь 100K+ concurrent connections per server at 10+ Gbps с правильной архитектурной стратегией**.
+Архитектура 2025 года требует холистического подхода: modern kernel features (io_uring, eBPF), intelligent memory management, CPU affinity optimization, horizontal scalability. Shift от thread-per-connection к event-driven, coupled с zero-copy techniques, обеспечивает 2-3x performance improvements maintaining security. **wolfguard может достичь 100K+ concurrent connections per server at 10+ Gbps с правильной архитектурной стратегией**.

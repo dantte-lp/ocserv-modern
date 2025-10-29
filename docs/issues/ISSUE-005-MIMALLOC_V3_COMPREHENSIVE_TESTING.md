@@ -26,7 +26,7 @@ mimalloc was upgraded from v2.2.4 to v3.1.5 as part of Sprint 2 library updates.
 
 ### Test Environment
 
-- **Container**: ocserv-modern-dev (localhost/ocserv-modern-dev:latest)
+- **Container**: wolfguard-dev (localhost/wolfguard-dev:latest)
 - **Platform**: Oracle Linux 10 in Podman
 - **Kernel**: 6.12.0-104.43.4.2.el10uek.x86_64
 - **CPU**: AMD EPYC Processor
@@ -394,7 +394,7 @@ mimalloc v3.1.5 demonstrates excellent stability under continuous operation with
 
 ### Result Files
 
-All test results saved in `/opt/projects/repositories/ocserv-modern/testing-results/`:
+All test results saved in `/opt/projects/repositories/wolfguard/testing-results/`:
 
 ```
 valgrind-phase2-mimalloc.log          # Valgrind clean report (15 lines)
@@ -403,7 +403,7 @@ phase5-stability.log                  # Server stability log
 phase5-single-long-test.log           # Client 5000-iteration test
 ```
 
-Benchmark results in `/opt/projects/repositories/ocserv-modern/tests/poc/results/`:
+Benchmark results in `/opt/projects/repositories/wolfguard/tests/poc/results/`:
 
 ```
 results_gnutls_20251029_103149.json   # GnuTLS performance metrics
@@ -441,7 +441,7 @@ cd /workspace/tests/poc && bash benchmark.sh
 
 mimalloc v3.1.5 has been **comprehensively tested and validated** across memory safety, stress resistance, performance, and long-running stability. All tests passed with perfect results (zero leaks, zero errors, zero crashes).
 
-**GO DECISION APPROVED**: mimalloc v3.1.5 is SAFE for production use in ocserv-modern v2.0.0.
+**GO DECISION APPROVED**: mimalloc v3.1.5 is SAFE for production use in wolfguard v2.0.0.
 
 **Sprint 2 Status**: UNBLOCKED - mimalloc testing complete, proceed with remaining Sprint 2 tasks.
 

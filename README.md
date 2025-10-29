@@ -1,16 +1,16 @@
-# ocserv-modern
+# wolfguard
 
 **Modern Refactored OpenConnect VPN Server with wolfSSL Native API**
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
-[![Version](https://img.shields.io/badge/version-2.0.0--alpha.1-orange)](https://github.com/dantte-lp/ocserv-modern/releases)
-[![Build Status](https://img.shields.io/badge/build-setup-yellow)](https://github.com/dantte-lp/ocserv-modern/actions)
+[![Version](https://img.shields.io/badge/version-2.0.0--alpha.1-orange)](https://github.com/dantte-lp/wolfguard/releases)
+[![Build Status](https://img.shields.io/badge/build-setup-yellow)](https://github.com/dantte-lp/wolfguard/actions)
 
 ---
 
 ## Overview
 
-ocserv-modern is a comprehensive refactoring of the OpenConnect VPN Server (ocserv), migrating from GnuTLS to wolfSSL native API and modernizing the entire C library stack. This project aims to provide improved performance, enhanced security with FIPS 140-3 compliance, DTLS 1.3 support, and a foundation for future QUIC integration.
+wolfguard is a comprehensive refactoring of the OpenConnect VPN Server (ocserv), migrating from GnuTLS to wolfSSL native API and modernizing the entire C library stack. This project aims to provide improved performance, enhanced security with FIPS 140-3 compliance, DTLS 1.3 support, and a foundation for future QUIC integration.
 
 ### Key Features
 
@@ -119,7 +119,7 @@ See [docs/REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md) for complete details.
 ### Directory Structure
 
 ```
-ocserv-modern/
+wolfguard/
 ├── src/
 │   ├── crypto/          # wolfSSL wrapper layer
 │   ├── network/         # Network layer (libuv, llhttp)
@@ -170,8 +170,8 @@ This provides a complete development environment with all dependencies pre-insta
 
 ```bash
 # Clone the repository
-git clone https://github.com/dantte-lp/ocserv-modern.git
-cd ocserv-modern
+git clone https://github.com/dantte-lp/wolfguard.git
+cd wolfguard
 
 # Install dependencies (see docs/DEPENDENCIES.md)
 
@@ -248,7 +248,7 @@ View coverage report at `build/meson-logs/coveragereport/index.html`
 
 **DO NOT** report security vulnerabilities via public GitHub issues.
 
-Please report security issues privately to: security@ocserv-modern.org
+Please report security issues privately to: security@wolfguard.org
 
 We will respond within 48 hours and work with you on disclosure.
 
@@ -329,8 +329,8 @@ We welcome contributions! However, please note:
 ### Communication Channels
 
 - **Mailing List**: ocserv-dev@lists.infradead.org
-- **GitHub Issues**: [Bug reports and feature requests](https://github.com/dantte-lp/ocserv-modern/issues)
-- **GitHub Discussions**: [Community discussions](https://github.com/dantte-lp/ocserv-modern/discussions)
+- **GitHub Issues**: [Bug reports and feature requests](https://github.com/dantte-lp/wolfguard/issues)
+- **GitHub Discussions**: [Community discussions](https://github.com/dantte-lp/wolfguard/discussions)
 - **Discord**: (coming soon)
 
 ### Code of Conduct
@@ -341,7 +341,7 @@ We follow the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md) (coming
 
 ## License
 
-ocserv-modern is licensed under the **GNU General Public License v2.0** (GPLv2).
+wolfguard is licensed under the **GNU General Public License v2.0** (GPLv2).
 
 See [LICENSE](LICENSE) for full text.
 
@@ -390,7 +390,7 @@ Use at your own risk. For production deployments, use stable [ocserv](https://gi
 ## Contact
 
 - **Project Lead**: TBD
-- **Security**: security@ocserv-modern.org
+- **Security**: security@wolfguard.org
 - **General**: ocserv-dev@lists.infradead.org
 
 ---

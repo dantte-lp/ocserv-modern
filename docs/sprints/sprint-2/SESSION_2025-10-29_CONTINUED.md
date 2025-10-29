@@ -39,7 +39,7 @@ echo 'developer ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/developer
 chmod 0440 /etc/sudoers.d/developer
 ```
 
-**Impact**: Dev container now builds successfully (image: `localhost/ocserv-modern-dev:latest`)
+**Impact**: Dev container now builds successfully (image: `localhost/wolfguard-dev:latest`)
 
 **Commit**: `ec1c31e` - `fix(containers): Create sudoers.d directory before writing`
 

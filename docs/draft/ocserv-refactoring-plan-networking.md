@@ -1,4 +1,4 @@
-# ocserv-modern: Современный VPN сервер на C23
+# wolfguard: Современный VPN сервер на C23
 
 ## 📋 README.md
 
@@ -29,7 +29,7 @@
 └──────────────────┬──────────────────────────────┘
                    ↓
 ┌─────────────────────────────────────────────────┐
-│  ocserv-modern (User Space)                     │
+│  wolfguard (User Space)                     │
 │  ├─ wolfSSL 5.8+    - TLS/DTLS crypto          │
 │  ├─ wolfSentry 1.6+ - IDPS/Firewall            │  ← User Space Processing
 │  ├─ Multi-queue TUN - Parallel packet handling │
@@ -147,7 +147,7 @@ user-profile = profile.xml      # XML profile для клиентов
 
 ### 📦 Структура проекта
 ```
-ocserv-modern/
+wolfguard/
 ├── src/
 │   ├── main.c                 # Точка входа
 │   ├── tun/
@@ -239,8 +239,8 @@ sudo make install
 
 #### Компиляция
 ```bash
-git clone https://github.com/dantte-lp/ocserv-modern.git
-cd ocserv-modern
+git clone https://github.com/dantte-lp/wolfguard.git
+cd wolfguard
 
 # Сборка eBPF programs
 ./scripts/build-bpf.sh
@@ -367,12 +367,12 @@ mtu = 1400
 sudo ./scripts/setup-system.sh
 
 # Запуск сервера
-sudo ocserv-modern -c /etc/ocserv/ocserv.conf -f
+sudo wolfguard -c /etc/ocserv/ocserv.conf -f
 
 # Или как systemd service
-sudo systemctl enable ocserv-modern
-sudo systemctl start ocserv-modern
-sudo systemctl status ocserv-modern
+sudo systemctl enable wolfguard
+sudo systemctl start wolfguard
+sudo systemctl status wolfguard
 
 # Мониторинг
 sudo occtl show status
@@ -519,8 +519,8 @@ GPLv2 (совместимо с wolfSSL GPLv2 и Linux kernel GPL)
 
 ### 📧 Контакты
 
-- GitHub: https://github.com/dantte-lp/ocserv-modern
-- Issues: https://github.com/dantte-lp/ocserv-modern/issues
+- GitHub: https://github.com/dantte-lp/wolfguard
+- Issues: https://github.com/dantte-lp/wolfguard/issues
 
 ---
 

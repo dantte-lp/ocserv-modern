@@ -1,15 +1,15 @@
-# ocserv-modern: Modern VPN Architecture Design
+# wolfguard: Modern VPN Architecture Design
 
 **Document Version**: 1.0
 **Date**: 2025-10-29
 **Based on**: Industry research and draft planning documents
-**Target**: ocserv-modern v2.0.0 (C23, ISO/IEC 9899:2024)
+**Target**: wolfguard v2.0.0 (C23, ISO/IEC 9899:2024)
 
 ---
 
 ## Executive Summary
 
-This document describes the modern architecture design for ocserv-modern, based on comprehensive research of industry-leading VPN implementations including ExpressVPN Lightway, CloudFlare BoringTun, WireGuard, Tailscale, and OpenVPN 3.x. The architecture emphasizes event-driven patterns, pure C implementation, and maximum performance through modern kernel interfaces.
+This document describes the modern architecture design for wolfguard, based on comprehensive research of industry-leading VPN implementations including ExpressVPN Lightway, CloudFlare BoringTun, WireGuard, Tailscale, and OpenVPN 3.x. The architecture emphasizes event-driven patterns, pure C implementation, and maximum performance through modern kernel interfaces.
 
 ---
 
@@ -64,7 +64,7 @@ This document describes the modern architecture design for ocserv-modern, based 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    ocserv-modern Process                         │
+│                    wolfguard Process                         │
 │                                                                   │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
 │  │   Main      │  │   Worker    │  │   Worker    │             │
@@ -152,7 +152,7 @@ This document describes the modern architecture design for ocserv-modern, based 
 - Session caching and resumption
 - DTLS 1.3 ready
 
-**Implementation**: See `/opt/projects/repositories/ocserv-modern/src/crypto/tls_abstract.h`
+**Implementation**: See `/opt/projects/repositories/wolfguard/src/crypto/tls_abstract.h`
 
 ---
 
@@ -639,15 +639,15 @@ static bool timing_safe_compare(const uint8_t *a, const uint8_t *b, size_t len) 
 
 ### Draft Research Documents (Analyzed)
 
-10. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-modern-architecture-research.md`
-11. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-modern-c-libraries.md`
-12. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-modern-technical-implementation.md`
-13. `/opt/projects/repositories/ocserv-modern/docs/draft/ocserv-refactoring-plan-networking.md`
+10. `/opt/projects/repositories/wolfguard/docs/draft/wolfguard-architecture-research.md`
+11. `/opt/projects/repositories/wolfguard/docs/draft/wolfguard-c-libraries.md`
+12. `/opt/projects/repositories/wolfguard/docs/draft/wolfguard-technical-implementation.md`
+13. `/opt/projects/repositories/wolfguard/docs/draft/ocserv-refactoring-plan-networking.md`
 
 ---
 
 **Document Status**: Architecture Reference
-**Maintainer**: ocserv-modern architecture team
+**Maintainer**: wolfguard architecture team
 **Review Schedule**: Quarterly
 **Next Review**: 2026-01-29
 

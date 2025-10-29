@@ -3,15 +3,15 @@ set -euo pipefail
 
 # build-test.sh - Test Container Build Script
 # Creates a runtime testing environment with test frameworks and coverage tools
-# for ocserv-modern
+# for wolfguard
 
 # Script configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-IMAGE_NAME="${IMAGE_NAME:-localhost/ocserv-modern-test}"
+IMAGE_NAME="${IMAGE_NAME:-localhost/wolfguard-test}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
-DEV_IMAGE="${DEV_IMAGE:-localhost/ocserv-modern-dev:latest}"
+DEV_IMAGE="${DEV_IMAGE:-localhost/wolfguard-dev:latest}"
 
 # Color output
 RED='\033[0;31m'
@@ -58,12 +58,12 @@ container=$(buildah from "$DEV_IMAGE")
 
 # Configure container metadata
 buildah config \
-    --label "io.ocserv-modern.version=2.0.0-alpha.1" \
-    --label "io.ocserv-modern.environment=test" \
+    --label "io.wolfguard.version=2.0.0-alpha.1" \
+    --label "io.wolfguard.environment=test" \
     --label "io.buildah.version=1.0" \
     --label "org.opencontainers.image.created=$BUILD_DATE" \
-    --label "org.opencontainers.image.title=ocserv-modern-test" \
-    --label "org.opencontainers.image.description=Test environment for ocserv-modern" \
+    --label "org.opencontainers.image.title=wolfguard-test" \
+    --label "org.opencontainers.image.description=Test environment for wolfguard" \
     --label "org.opencontainers.image.version=2.0.0-alpha.1" \
     --label "org.opencontainers.image.licenses=GPLv2" \
     "$container"
@@ -124,13 +124,13 @@ buildah run "$container" -- bash -c "
 #!/bin/bash
 set -euo pipefail
 
-# Test runner for ocserv-modern
+# Test runner for wolfguard
 WORKSPACE=\${WORKSPACE:-/workspace}
 TEST_RESULTS=\${TEST_RESULTS:-\$WORKSPACE/test-results}
 COVERAGE_REPORTS=\${COVERAGE_REPORTS:-\$WORKSPACE/coverage-reports}
 
 echo '================================================'
-echo 'ocserv-modern Test Runner'
+echo 'wolfguard Test Runner'
 echo '================================================'
 
 # Run meson tests
@@ -173,11 +173,11 @@ buildah run "$container" -- bash -c "
 #!/bin/bash
 set -euo pipefail
 
-# Benchmark runner for ocserv-modern
+# Benchmark runner for wolfguard
 WORKSPACE=\${WORKSPACE:-/workspace}
 
 echo '================================================'
-echo 'ocserv-modern Benchmark Runner'
+echo 'wolfguard Benchmark Runner'
 echo '================================================'
 
 if [ -d \$WORKSPACE/tests/bench ]; then
@@ -235,7 +235,7 @@ log_info "Test container build completed successfully!"
 log_info "Image: $IMAGE_NAME:$IMAGE_TAG"
 log_info ""
 log_info "To run tests:"
-log_info "  podman run -it --rm -v /opt/projects/repositories/ocserv-modern:/workspace:Z $IMAGE_NAME:$IMAGE_TAG"
+log_info "  podman run -it --rm -v /opt/projects/repositories/wolfguard:/workspace:Z $IMAGE_NAME:$IMAGE_TAG"
 log_info ""
 log_info "To run interactively:"
-log_info "  podman run -it --rm -v /opt/projects/repositories/ocserv-modern:/workspace:Z $IMAGE_NAME:$IMAGE_TAG /bin/bash"
+log_info "  podman run -it --rm -v /opt/projects/repositories/wolfguard:/workspace:Z $IMAGE_NAME:$IMAGE_TAG /bin/bash"

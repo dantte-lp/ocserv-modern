@@ -1,6 +1,6 @@
-# Definition of Done - ocserv-modern
+# Definition of Done - wolfguard
 
-**Project**: ocserv-modern v2.0.0
+**Project**: wolfguard v2.0.0
 **Last Updated**: 2025-10-29
 **Version**: 1.0
 

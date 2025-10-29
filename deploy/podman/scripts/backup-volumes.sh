@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# backup-volumes.sh - Backup all named volumes for ocserv-modern
+# backup-volumes.sh - Backup all named volumes for wolfguard
 # Creates compressed archives of volume data for disaster recovery
 #
 # Usage:
@@ -36,10 +36,10 @@ BACKUP_SUBDIR="${BACKUP_DIR}/${TIMESTAMP}"
 
 # Volumes to backup
 VOLUMES=(
-    "ocserv-modern_dev-home"
-    "ocserv-modern_build-cache"
-    "ocserv-modern_test-results"
-    "ocserv-modern_ci-reports"
+    "wolfguard_dev-home"
+    "wolfguard_build-cache"
+    "wolfguard_test-results"
+    "wolfguard_ci-reports"
 )
 
 log_info "Starting volume backup"

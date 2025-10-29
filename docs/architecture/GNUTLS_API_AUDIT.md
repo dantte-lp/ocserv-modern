@@ -1,8 +1,8 @@
 # GnuTLS API Audit - ocserv to wolfSSL Migration
 
-**Project**: ocserv-modern v2.0.0-alpha.1
+**Project**: wolfguard v2.0.0-alpha.1
 **Date**: 2025-10-29
-**Author**: ocserv-modern Architecture Team
+**Author**: wolfguard Architecture Team
 **Status**: In Progress
 
 ## Executive Summary

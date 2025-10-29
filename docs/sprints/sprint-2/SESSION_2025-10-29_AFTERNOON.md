@@ -140,7 +140,7 @@ Test commands prepared:
 
 ```bash
 # Enter container
-cd /opt/projects/repositories/ocserv-modern/deploy/podman
+cd /opt/projects/repositories/wolfguard/deploy/podman
 podman-compose up -d dev
 podman-compose exec dev bash
 
@@ -245,7 +245,7 @@ valgrind --leak-check=full ./build/tests/unit/test_tls_abstract
 **Impact**: HIGH (blocks all testing)
 **Mitigation**:
 - Can fall back to previous container image
-- Previous image tag: `localhost/ocserv-modern-dev:20251029-sprint1`
+- Previous image tag: `localhost/wolfguard-dev:20251029-sprint1`
 - Worst case: Use system GCC 14 without container
 
 ### Risk 3: Testing Reveals Multiple Library Issues
@@ -283,9 +283,9 @@ valgrind --leak-check=full ./build/tests/unit/test_tls_abstract
 
 ### Documentation
 
-- Container Dockerfile: `/opt/projects/repositories/ocserv-modern/deploy/podman/Dockerfile.dev`
-- CI/CD Docs: `/opt/projects/repositories/ocserv-modern/.github/`
-- Sprint 2 Planning: `/opt/projects/repositories/ocserv-modern/docs/sprints/sprint-2/planning/`
+- Container Dockerfile: `/opt/projects/repositories/wolfguard/deploy/podman/Dockerfile.dev`
+- CI/CD Docs: `/opt/projects/repositories/wolfguard/.github/`
+- Sprint 2 Planning: `/opt/projects/repositories/wolfguard/docs/sprints/sprint-2/planning/`
 
 ### External Resources
 
@@ -295,12 +295,12 @@ valgrind --leak-check=full ./build/tests/unit/test_tls_abstract
 
 ### Previous Sessions
 
-- Sprint 1 Summary: `/opt/projects/repositories/ocserv-modern/docs/sprints/sprint-1/SPRINT_SUMMARY.md`
-- Sprint 1 Session: `/opt/projects/repositories/ocserv-modern/docs/sprints/sprint-1/SESSION_2025-10-29.md`
+- Sprint 1 Summary: `/opt/projects/repositories/wolfguard/docs/sprints/sprint-1/SPRINT_SUMMARY.md`
+- Sprint 1 Session: `/opt/projects/repositories/wolfguard/docs/sprints/sprint-1/SESSION_2025-10-29.md`
 
 ## Notes
 
-- All git commits pushed to remote: https://github.com/dantte-lp/ocserv-modern
+- All git commits pushed to remote: https://github.com/dantte-lp/wolfguard
 - Container build in progress, monitoring via `tail -f` would show live progress
 - Documentation structure needs `docs/issues/` directory creation
 - TODO.md is significantly outdated (shows Sprint 0, we're in Sprint 2)

@@ -1,4 +1,4 @@
-# ocserv-modern: Comprehensive Refactoring Plan
+# wolfguard: Comprehensive Refactoring Plan
 
 **Document Version**: 1.0
 **Date**: 2025-10-29
@@ -1290,7 +1290,7 @@ This is the most critical and risky phase of the project.
 wolfSentry is wolfSSL's embedded IDPS (Intrusion Detection and Prevention System) providing enterprise-grade security features with minimal overhead:
 
 - **Minimal Footprint**: 64 KB code + 32 KB RAM
-- **Pure C Implementation**: No C++ dependencies (perfect fit for ocserv-modern)
+- **Pure C Implementation**: No C++ dependencies (perfect fit for wolfguard)
 - **Native wolfSSL Integration**: Designed to work with wolfSSL TLS/DTLS
 - **Dynamic Configuration**: JSON-based runtime reconfiguration with atomic transitions
 - **Zero Data Plane Impact**: Operates only on connection establishment
@@ -1390,8 +1390,8 @@ wolfSentry is wolfSSL's embedded IDPS (Intrusion Detection and Prevention System
 #### Documentation Reference
 
 Complete wolfSentry integration documentation available at:
-- Architecture: `/opt/projects/repositories/cisco-secure-client-docs/docs/ocserv-modern/architecture/wolfsentry-integration.md`
-- Implementation: `/opt/projects/repositories/cisco-secure-client-docs/docs/ocserv-modern/implementation/wolfsentry-idps.md`
+- Architecture: `/opt/projects/repositories/wolfguard-docs/docs/wolfguard/architecture/wolfsentry-integration.md`
+- Implementation: `/opt/projects/repositories/wolfguard-docs/docs/wolfguard/implementation/wolfsentry-idps.md`
 
 ---
 

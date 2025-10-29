@@ -1,8 +1,8 @@
-# ocserv-modern Release Policy
+# wolfguard Release Policy
 
 ## Overview
 
-ocserv-modern follows Semantic Versioning 2.0.0 for all releases. This document defines the release process, versioning strategy, support policy, and lifecycle management.
+wolfguard follows Semantic Versioning 2.0.0 for all releases. This document defines the release process, versioning strategy, support policy, and lifecycle management.
 
 ## Semantic Versioning
 
@@ -304,7 +304,7 @@ v2.0.0: Feature X removed, migration guide provided
 - GitHub Releases page
 - Project mailing list (ocserv-dev@lists.infradead.org)
 - Project website news section
-- Twitter/Mastodon (@ocserv_modern)
+- Twitter/Mastodon (@wolfguard)
 - Reddit (r/VPN, r/opensource)
 
 ### Security Advisories
@@ -312,7 +312,7 @@ v2.0.0: Feature X removed, migration guide provided
 - GitHub Security Advisories
 - CVE publication (MITRE)
 - Direct notification to registered enterprise users
-- Security mailing list (security@ocserv-modern.org)
+- Security mailing list (security@wolfguard.org)
 
 ## Quality Gates
 
