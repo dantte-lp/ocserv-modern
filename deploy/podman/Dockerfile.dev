@@ -156,7 +156,6 @@ RUN cd /tmp && \
         --enable-postauth \
         --enable-hrrcookie \
         --enable-quic \
-        --enable-debug \
         --prefix=/usr/local \
         CFLAGS="-O2 -g -fstack-protector-strong" \
         LDFLAGS="-Wl,-z,relro -Wl,-z,now" && \
