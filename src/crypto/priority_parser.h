@@ -152,9 +152,11 @@ typedef struct {
     // Base configuration
     const char *base_keyword;  // "NORMAL", "PERFORMANCE", etc. (or nullptr)
 
-    // TLS versions (bitmask of tls_version_t values)
-    uint32_t enabled_versions;   // Explicitly enabled versions
-    uint32_t disabled_versions;  // Explicitly disabled versions
+    // TLS versions (C23 bool array - safe direct indexing by protocol value)
+    bool enabled_versions[256];   // Direct indexing: enabled_versions[TLS_VERSION_TLS12]
+    bool disabled_versions[256];  // Direct indexing: disabled_versions[TLS_VERSION_TLS12]
+    tls_version_t min_version;    // Minimum enabled version (for efficient range checking)
+    tls_version_t max_version;    // Maximum enabled version (for efficient range checking)
 
     // Ciphers
     char enabled_ciphers[PRIORITY_MAX_CIPHERS][PRIORITY_MAX_CIPHER_NAME];
@@ -190,6 +192,63 @@ typedef struct {
     bool has_base_keyword;       // true if base keyword specified
     bool explicit_none;          // true if "NONE" keyword used
 } priority_config_t;
+
+// C23 compile-time assertions for TLS version value safety
+_Static_assert(TLS_VERSION_SSL3 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_TLS10 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_TLS11 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_TLS12 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_TLS13 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_DTLS10 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_DTLS12 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+_Static_assert(TLS_VERSION_DTLS13 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+
+/**
+ * Check if TLS version is enabled (inline helper)
+ *
+ * This function performs efficient O(1) lookup with range checking.
+ *
+ * @param version TLS version to check
+ * @param config Priority configuration
+ * @return true if version is enabled, false otherwise
+ *
+ * Thread Safety: Thread-safe (read-only operation)
+ * Complexity: O(1)
+ */
+static inline bool is_version_enabled(const tls_version_t version,
+                                       const priority_config_t *config)
+{
+    // Fast path: range check using min/max
+    if (version < config->min_version || version > config->max_version) {
+        return false;
+    }
+    // Direct array lookup (O(1))
+    return config->enabled_versions[version];
+}
+
+/**
+ * Check if TLS version is disabled (inline helper)
+ *
+ * @param version TLS version to check
+ * @param config Priority configuration
+ * @return true if version is disabled, false otherwise
+ *
+ * Thread Safety: Thread-safe (read-only operation)
+ * Complexity: O(1)
+ */
+static inline bool is_version_disabled(const tls_version_t version,
+                                        const priority_config_t *config)
+{
+    return config->disabled_versions[version];
+}
 
 /**
  * wolfSSL configuration
