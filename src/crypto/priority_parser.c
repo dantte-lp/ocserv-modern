@@ -382,6 +382,46 @@ void priority_config_init(priority_config_t *config)
 
     memset(config, 0, sizeof(*config));
     config->min_security_bits = 0;  // No minimum by default
+
+    // Initialize version range to invalid values (will be set when versions are enabled)
+    config->min_version = 0xFF;  // Max possible value (will be decreased)
+    config->max_version = 0x00;  // Min possible value (will be increased)
+}
+
+/**
+ * Enable TLS version in configuration (internal helper)
+ *
+ * This function safely enables a TLS version and updates the min/max range.
+ *
+ * @param config Priority configuration
+ * @param version TLS version to enable
+ */
+static inline void enable_tls_version(priority_config_t *config,
+                                       const tls_version_t version)
+{
+    config->enabled_versions[version] = true;
+    config->disabled_versions[version] = false;
+
+    // Update version range for efficient range checking
+    if (version < config->min_version) {
+        config->min_version = version;
+    }
+    if (version > config->max_version) {
+        config->max_version = version;
+    }
+}
+
+/**
+ * Disable TLS version in configuration (internal helper)
+ *
+ * @param config Priority configuration
+ * @param version TLS version to disable
+ */
+static inline void disable_tls_version(priority_config_t *config,
+                                        const tls_version_t version)
+{
+    config->enabled_versions[version] = false;
+    config->disabled_versions[version] = true;
 }
 
 /**
@@ -402,51 +442,59 @@ static int parse_base_keyword(const char *keyword, size_t keyword_len,
     if (strcmp(kw, "NORMAL") == 0) {
         config->base_keyword = "NORMAL";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->min_security_bits = 64;
     } else if (strcmp(kw, "PERFORMANCE") == 0) {
         config->base_keyword = "PERFORMANCE";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->min_security_bits = 128;
     } else if (strcmp(kw, "SECURE128") == 0) {
         config->base_keyword = "SECURE128";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->min_security_bits = 128;
     } else if (strcmp(kw, "SECURE192") == 0) {
         config->base_keyword = "SECURE192";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->min_security_bits = 192;
     } else if (strcmp(kw, "SECURE256") == 0) {
         config->base_keyword = "SECURE256";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->min_security_bits = 256;
     } else if (strcmp(kw, "PFS") == 0) {
         config->base_keyword = "PFS";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->require_pfs = true;
         config->min_security_bits = 128;
     } else if (strcmp(kw, "NONE") == 0) {
         config->base_keyword = "NONE";
         config->has_base_keyword = true;
         config->explicit_none = true;
-        config->enabled_versions = 0;  // Nothing enabled by default
+        // Nothing enabled by default - arrays already zeroed by memset
     } else if (strcmp(kw, "LEGACY") == 0) {
         config->base_keyword = "LEGACY";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS10) | (1U << TLS_VERSION_TLS11) |
-                                   (1U << TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS10);
+        enable_tls_version(config, TLS_VERSION_TLS11);
+        enable_tls_version(config, TLS_VERSION_TLS12);
         config->min_security_bits = 0;
     } else if (strcmp(kw, "SYSTEM") == 0) {
         // SYSTEM is special - use system-wide policy
         // For now, treat as NORMAL
         config->base_keyword = "SYSTEM";
         config->has_base_keyword = true;
-        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        enable_tls_version(config, TLS_VERSION_TLS12);
+        enable_tls_version(config, TLS_VERSION_TLS13);
         config->min_security_bits = 64;
     } else {
         return PRIORITY_E_UNKNOWN_KEYWORD;
@@ -491,11 +539,9 @@ static int parse_version(const char *version_str, size_t version_len,
     }
 
     if (is_addition) {
-        config->enabled_versions |= (1U << version);
-        config->disabled_versions &= ~(1U << version);
+        enable_tls_version(config, version);
     } else {
-        config->disabled_versions |= (1U << version);
-        config->enabled_versions &= ~(1U << version);
+        disable_tls_version(config, version);
     }
 
     return PRIORITY_E_SUCCESS;
@@ -668,15 +714,29 @@ int priority_parse(const token_list_t *tokens, priority_config_t *config)
 
     // Validate configuration for conflicts
     // Check if any version is both enabled and disabled
-    uint32_t conflict = config->enabled_versions & config->disabled_versions;
-    if (conflict != 0) {
+    bool has_conflict = false;
+    for (size_t i = 0; i < 256; i++) {
+        if (config->enabled_versions[i] && config->disabled_versions[i]) {
+            has_conflict = true;
+            break;
+        }
+    }
+    if (has_conflict) {
         set_last_error(PRIORITY_E_CONFLICT, 0, nullptr,
                       "TLS version both enabled and disabled");
         return PRIORITY_E_CONFLICT;
     }
 
     // If no base keyword and explicit NONE, ensure versions are explicitly set
-    if (config->explicit_none && config->enabled_versions == 0) {
+    // Check if any version is enabled
+    bool has_enabled_version = false;
+    for (size_t i = 0; i < 256; i++) {
+        if (config->enabled_versions[i]) {
+            has_enabled_version = true;
+            break;
+        }
+    }
+    if (config->explicit_none && !has_enabled_version) {
         // This is valid - user must explicitly add versions
     }
 
@@ -796,31 +856,29 @@ static void map_version_range(const priority_config_t *config,
     *min_version = 0;
     *max_version = 0;
 
-    uint32_t versions = config->enabled_versions;
-
     // Determine minimum version (lowest enabled)
-    if (versions & (1U << TLS_VERSION_SSL3)) {
+    if (config->enabled_versions[TLS_VERSION_SSL3]) {
         *min_version = 0x0300;  // SSL 3.0 (not recommended!)
-    } else if (versions & (1U << TLS_VERSION_TLS10)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS10]) {
         *min_version = 0x0301;  // TLS 1.0
-    } else if (versions & (1U << TLS_VERSION_TLS11)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS11]) {
         *min_version = 0x0302;  // TLS 1.1
-    } else if (versions & (1U << TLS_VERSION_TLS12)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS12]) {
         *min_version = 0x0303;  // TLS 1.2
-    } else if (versions & (1U << TLS_VERSION_TLS13)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS13]) {
         *min_version = 0x0304;  // TLS 1.3
     }
 
     // Determine maximum version (highest enabled)
-    if (versions & (1U << TLS_VERSION_TLS13)) {
+    if (config->enabled_versions[TLS_VERSION_TLS13]) {
         *max_version = 0x0304;  // TLS 1.3
-    } else if (versions & (1U << TLS_VERSION_TLS12)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS12]) {
         *max_version = 0x0303;  // TLS 1.2
-    } else if (versions & (1U << TLS_VERSION_TLS11)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS11]) {
         *max_version = 0x0302;  // TLS 1.1
-    } else if (versions & (1U << TLS_VERSION_TLS10)) {
+    } else if (config->enabled_versions[TLS_VERSION_TLS10]) {
         *max_version = 0x0301;  // TLS 1.0
-    } else if (versions & (1U << TLS_VERSION_SSL3)) {
+    } else if (config->enabled_versions[TLS_VERSION_SSL3]) {
         *max_version = 0x0300;  // SSL 3.0
     }
 }
@@ -837,16 +895,16 @@ static long map_options_flags(const priority_config_t *config)
     }
 
     // Disable specific versions if excluded
-    if (config->disabled_versions & (1U << TLS_VERSION_SSL3)) {
+    if (config->disabled_versions[TLS_VERSION_SSL3]) {
         options |= 0x02000000L;  // SSL_OP_NO_SSLv3
     }
-    if (config->disabled_versions & (1U << TLS_VERSION_TLS10)) {
+    if (config->disabled_versions[TLS_VERSION_TLS10]) {
         options |= 0x04000000L;  // SSL_OP_NO_TLSv1
     }
-    if (config->disabled_versions & (1U << TLS_VERSION_TLS11)) {
+    if (config->disabled_versions[TLS_VERSION_TLS11]) {
         options |= 0x10000000L;  // SSL_OP_NO_TLSv1_1
     }
-    if (config->disabled_versions & (1U << TLS_VERSION_TLS12)) {
+    if (config->disabled_versions[TLS_VERSION_TLS12]) {
         options |= 0x08000000L;  // SSL_OP_NO_TLSv1_2
     }
 
@@ -871,9 +929,9 @@ int priority_map_to_wolfssl(const priority_config_t *config,
     wolfssl_config_init(wolfssl_cfg);
 
     // Build TLS 1.2 cipher list
-    if (config->enabled_versions & ((1U << TLS_VERSION_TLS10) |
-                                     (1U << TLS_VERSION_TLS11) |
-                                     (1U << TLS_VERSION_TLS12))) {
+    if (config->enabled_versions[TLS_VERSION_TLS10] ||
+        config->enabled_versions[TLS_VERSION_TLS11] ||
+        config->enabled_versions[TLS_VERSION_TLS12]) {
         const char *base_ciphers = map_base_keyword_to_ciphers(config->base_keyword);
         snprintf(wolfssl_cfg->cipher_list, sizeof(wolfssl_cfg->cipher_list),
                  "%s", base_ciphers);
@@ -881,7 +939,7 @@ int priority_map_to_wolfssl(const priority_config_t *config,
     }
 
     // Build TLS 1.3 cipher suites
-    if (config->enabled_versions & (1U << TLS_VERSION_TLS13)) {
+    if (config->enabled_versions[TLS_VERSION_TLS13]) {
         const char *tls13_ciphers = map_base_keyword_to_tls13_ciphers(config->base_keyword);
         snprintf(wolfssl_cfg->ciphersuites, sizeof(wolfssl_cfg->ciphersuites),
                  "%s", tls13_ciphers);
@@ -1094,36 +1152,54 @@ size_t priority_config_dump(const priority_config_t *config,
                           "Base keyword: %s\n", config->base_keyword);
     }
 
-    // Enabled versions
-    if (config->enabled_versions != 0) {
+    // Enabled versions (print all enabled versions in hex format)
+    bool has_enabled = false;
+    for (size_t i = 0; i < 256; i++) {
+        if (config->enabled_versions[i]) {
+            has_enabled = true;
+            break;
+        }
+    }
+    if (has_enabled) {
         offset += snprintf(buffer + offset, buffer_len - offset,
                           "Enabled versions: ");
-        if (config->enabled_versions & (1U << TLS_VERSION_SSL3))
+        if (config->enabled_versions[TLS_VERSION_SSL3])
             offset += snprintf(buffer + offset, buffer_len - offset, "SSL3.0 ");
-        if (config->enabled_versions & (1U << TLS_VERSION_TLS10))
+        if (config->enabled_versions[TLS_VERSION_TLS10])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.0 ");
-        if (config->enabled_versions & (1U << TLS_VERSION_TLS11))
+        if (config->enabled_versions[TLS_VERSION_TLS11])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.1 ");
-        if (config->enabled_versions & (1U << TLS_VERSION_TLS12))
+        if (config->enabled_versions[TLS_VERSION_TLS12])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.2 ");
-        if (config->enabled_versions & (1U << TLS_VERSION_TLS13))
+        if (config->enabled_versions[TLS_VERSION_TLS13])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.3 ");
         offset += snprintf(buffer + offset, buffer_len - offset, "\n");
+        // Also print min/max range
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Version range: min=0x%02x max=0x%02x\n",
+                          config->min_version, config->max_version);
     }
 
     // Disabled versions
-    if (config->disabled_versions != 0) {
+    bool has_disabled = false;
+    for (size_t i = 0; i < 256; i++) {
+        if (config->disabled_versions[i]) {
+            has_disabled = true;
+            break;
+        }
+    }
+    if (has_disabled) {
         offset += snprintf(buffer + offset, buffer_len - offset,
                           "Disabled versions: ");
-        if (config->disabled_versions & (1U << TLS_VERSION_SSL3))
+        if (config->disabled_versions[TLS_VERSION_SSL3])
             offset += snprintf(buffer + offset, buffer_len - offset, "SSL3.0 ");
-        if (config->disabled_versions & (1U << TLS_VERSION_TLS10))
+        if (config->disabled_versions[TLS_VERSION_TLS10])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.0 ");
-        if (config->disabled_versions & (1U << TLS_VERSION_TLS11))
+        if (config->disabled_versions[TLS_VERSION_TLS11])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.1 ");
-        if (config->disabled_versions & (1U << TLS_VERSION_TLS12))
+        if (config->disabled_versions[TLS_VERSION_TLS12])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.2 ");
-        if (config->disabled_versions & (1U << TLS_VERSION_TLS13))
+        if (config->disabled_versions[TLS_VERSION_TLS13])
             offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.3 ");
         offset += snprintf(buffer + offset, buffer_len - offset, "\n");
     }
