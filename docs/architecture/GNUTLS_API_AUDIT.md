@@ -496,6 +496,8 @@ wolfSSL-specific optimizations:
 ## References
 
 - **ocserv upstream**: https://gitlab.com/openconnect/ocserv
+- **OpenConnect Protocol**: https://datatracker.ietf.org/doc/draft-mavrogiannopoulos-openconnect/ (v1.2, draft-04)
+- **Protocol Reference**: docs/architecture/PROTOCOL_REFERENCE.md
 - **GnuTLS Manual**: https://gnutls.org/manual/
 - **wolfSSL Manual**: https://www.wolfssl.com/documentation/manuals/wolfssl/index.html
 - **wolfSSL Tuning Guide**: https://www.wolfssl.com/documentation/manuals/wolfssl-tuning-guide/index.html
@@ -503,7 +505,7 @@ wolfSSL-specific optimizations:
 - **wolfSSL Ecosystem Guide**: docs/architecture/WOLFSSL_ECOSYSTEM.md
 - **RFC 8446**: Transport Layer Security (TLS) 1.3
 - **RFC 9147**: DTLS 1.3
-- **Cisco AnyConnect Protocol**: (Proprietary - reverse engineered by OpenConnect)
+- **Cisco AnyConnect Protocol**: (Proprietary - OpenConnect provides compatible implementation)
 
 ## Appendix A: Complete Function Mapping Table
 

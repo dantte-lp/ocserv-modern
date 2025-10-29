@@ -16,6 +16,7 @@ ocserv-modern is a comprehensive refactoring of the OpenConnect VPN Server (ocse
 
 - **wolfSSL Native API**: High-performance TLS/DTLS with FIPS 140-3 certification
 - **DTLS 1.3 Support**: First-in-class support for the latest DTLS standard (RFC 9147)
+- **OpenConnect Protocol v1.2**: Full compliance with OpenConnect VPN protocol specification
 - **Modern C Libraries**: libuv, llhttp, mimalloc, cJSON
 - **Cisco Compatibility**: 100% compatible with Cisco Secure Client 5.x and newer
 - **Security-First Design**: External security audit, comprehensive testing
