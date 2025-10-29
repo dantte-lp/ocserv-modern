@@ -709,6 +709,87 @@ Some GnuTLS priority string features may not have direct wolfSSL equivalents:
 
 ---
 
+## Implementation Notes
+
+### TLS Version Tracking (C23 Best Practice)
+
+**Original Design (Incorrect)**:
+The initial implementation used `uint32_t` bitmask with TLS version enum values as shift indices:
+```c
+// INCORRECT - Causes undefined behavior!
+uint32_t enabled_versions;
+config->enabled_versions |= (1U << TLS_VERSION_TLS12);  // TLS_VERSION_TLS12 = 0x33 (51)
+```
+
+**Problem**:
+- TLS version values are protocol-defined: `TLS_VERSION_TLS12 = 0x33 = 51 decimal`
+- Shift operation `(1U << 51)` exceeds 32-bit integer size
+- Results in undefined behavior per C standard
+- Compiler warning: `shift-count-overflow`
+- Not safe for values 0x30-0x34 (48-52)
+
+**Current Design (C23 Best Practice)**:
+Uses bool array with direct indexing by protocol value:
+```c
+// CORRECT - Safe, fast, and C23-idiomatic
+bool enabled_versions[256];   // Direct indexing by protocol value
+bool disabled_versions[256];  // Direct indexing by protocol value
+tls_version_t min_version;    // For efficient range checking
+tls_version_t max_version;    // For efficient range checking
+
+// Usage:
+config->enabled_versions[TLS_VERSION_TLS12] = true;
+
+// Helper functions for safe manipulation:
+static inline void enable_tls_version(priority_config_t *config,
+                                       const tls_version_t version)
+{
+    config->enabled_versions[version] = true;
+    config->disabled_versions[version] = false;
+    if (version < config->min_version) config->min_version = version;
+    if (version > config->max_version) config->max_version = version;
+}
+
+// Efficient O(1) lookup with range checking:
+static inline bool is_version_enabled(const tls_version_t version,
+                                       const priority_config_t *config)
+{
+    if (version < config->min_version || version > config->max_version) {
+        return false;
+    }
+    return config->enabled_versions[version];
+}
+```
+
+**Benefits**:
+1. **Safety**: No undefined behavior, works for any protocol value 0x00-0xFF
+2. **Performance**: O(1) lookup and update operations
+3. **Readability**: Direct array indexing is more intuitive than bitmasking
+4. **Maintainability**: Clear intent, easier to debug
+5. **C23 Compliance**: Uses C23 `bool` type and compile-time assertions
+6. **Compiler-Friendly**: No shift-count-overflow warnings
+7. **Range Optimization**: min/max fields enable fast range checking before array access
+
+**Compile-Time Safety**:
+```c
+// C23 _Static_assert ensures protocol values fit in array
+_Static_assert(TLS_VERSION_TLS12 < 256,
+               "TLS version values must fit in uint8_t range for array indexing");
+```
+
+**Memory Impact**:
+- Old design: 2 × 4 bytes = 8 bytes (uint32_t bitmasks)
+- New design: 2 × 256 bytes + 2 × 4 bytes = 520 bytes (bool arrays + min/max)
+- Trade-off: 512 additional bytes for safety, clarity, and correctness
+- Total struct size: ~23KB (dominated by cipher name arrays, not version tracking)
+
+**Related Commits**:
+- `be5664f`: Header file refactoring with C23 bool arrays
+- `c7399c2`: Implementation file bitmask replacement
+- `27695ac`: Const correctness improvements
+
+---
+
 ## References
 
 1. **GnuTLS Priority Strings**: https://gnutls.org/manual/html_node/Priority-Strings.html
