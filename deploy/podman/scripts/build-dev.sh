@@ -76,7 +76,7 @@ buildah config \
 
 # Install base development tools
 log_info "Installing base development tools..."
-buildah run "$container" -- bash -c "dnf install -y \
+buildah run "$container" -- bash -c "dnf install -y --allowerasing \
     gcc \
     gcc-c++ \
     make \
