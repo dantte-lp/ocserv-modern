@@ -146,7 +146,6 @@ RUN cd /tmp && \
         --disable-oldtls \
         --enable-harden \
         --enable-sp \
-        --enable-sp-asm \
         --enable-opensslextra \
         --enable-opensslall \
         --enable-curve25519 \
