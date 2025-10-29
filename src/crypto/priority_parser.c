@@ -684,7 +684,7 @@ int priority_parse(const token_list_t *tokens, priority_config_t *config)
 }
 
 /* ============================================================================
- * Phase 3: Mapping (to be implemented)
+ * Phase 3: Mapping
  * ============================================================================ */
 
 void wolfssl_config_init(wolfssl_config_t *wolfssl_cfg)
@@ -698,13 +698,206 @@ void wolfssl_config_init(wolfssl_config_t *wolfssl_cfg)
     wolfssl_cfg->max_version = 0;
 }
 
+/**
+ * Map base keyword to wolfSSL cipher list
+ */
+static const char* map_base_keyword_to_ciphers(const char *keyword)
+{
+    if (keyword == nullptr) {
+        return "DEFAULT";
+    }
+
+    if (strcmp(keyword, "NORMAL") == 0) {
+        // NORMAL: Modern secure ciphers
+        return "ECDHE-RSA-AES128-GCM-SHA256:"
+               "ECDHE-RSA-AES256-GCM-SHA384:"
+               "ECDHE-ECDSA-AES128-GCM-SHA256:"
+               "ECDHE-ECDSA-AES256-GCM-SHA384:"
+               "ECDHE-RSA-CHACHA20-POLY1305:"
+               "DHE-RSA-AES128-GCM-SHA256:"
+               "DHE-RSA-AES256-GCM-SHA384";
+    } else if (strcmp(keyword, "PERFORMANCE") == 0) {
+        // PERFORMANCE: Fast ciphers first
+        return "AES128-GCM-SHA256:"
+               "CHACHA20-POLY1305-SHA256:"
+               "ECDHE-RSA-AES128-GCM-SHA256:"
+               "ECDHE-RSA-CHACHA20-POLY1305";
+    } else if (strcmp(keyword, "SECURE128") == 0) {
+        // SECURE128: Minimum 128-bit security
+        return "ECDHE-RSA-AES128-GCM-SHA256:"
+               "ECDHE-RSA-AES256-GCM-SHA384:"
+               "ECDHE-ECDSA-AES128-GCM-SHA256:"
+               "ECDHE-ECDSA-AES256-GCM-SHA384";
+    } else if (strcmp(keyword, "SECURE192") == 0 || strcmp(keyword, "SECURE256") == 0) {
+        // SECURE192/256: 192/256-bit security (AES-256 only)
+        return "ECDHE-RSA-AES256-GCM-SHA384:"
+               "ECDHE-ECDSA-AES256-GCM-SHA384:"
+               "ECDHE-RSA-CHACHA20-POLY1305:"
+               "DHE-RSA-AES256-GCM-SHA384";
+    } else if (strcmp(keyword, "PFS") == 0) {
+        // PFS: Perfect forward secrecy (ECDHE/DHE only)
+        return "ECDHE-RSA-AES128-GCM-SHA256:"
+               "ECDHE-RSA-AES256-GCM-SHA384:"
+               "ECDHE-ECDSA-AES128-GCM-SHA256:"
+               "ECDHE-ECDSA-AES256-GCM-SHA384:"
+               "ECDHE-RSA-CHACHA20-POLY1305:"
+               "DHE-RSA-AES128-GCM-SHA256:"
+               "DHE-RSA-AES256-GCM-SHA384";
+    } else if (strcmp(keyword, "NONE") == 0) {
+        // NONE: Empty cipher list
+        return "";
+    } else if (strcmp(keyword, "LEGACY") == 0) {
+        // LEGACY: Include older ciphers
+        return "AES128-SHA:"
+               "AES256-SHA:"
+               "ECDHE-RSA-AES128-SHA:"
+               "ECDHE-RSA-AES256-SHA:"
+               "DHE-RSA-AES128-SHA:"
+               "DHE-RSA-AES256-SHA";
+    } else {
+        // Default (including SYSTEM)
+        return "DEFAULT";
+    }
+}
+
+/**
+ * Map base keyword to TLS 1.3 cipher suites
+ */
+static const char* map_base_keyword_to_tls13_ciphers(const char *keyword)
+{
+    if (keyword == nullptr) {
+        return "TLS13-AES128-GCM-SHA256:"
+               "TLS13-AES256-GCM-SHA384:"
+               "TLS13-CHACHA20-POLY1305-SHA256";
+    }
+
+    if (strcmp(keyword, "PERFORMANCE") == 0) {
+        return "TLS13-AES128-GCM-SHA256:"
+               "TLS13-CHACHA20-POLY1305-SHA256";
+    } else if (strcmp(keyword, "SECURE192") == 0 || strcmp(keyword, "SECURE256") == 0) {
+        return "TLS13-AES256-GCM-SHA384:"
+               "TLS13-CHACHA20-POLY1305-SHA256";
+    } else if (strcmp(keyword, "NONE") == 0) {
+        return "";
+    } else {
+        // Default for NORMAL, SECURE128, PFS, etc.
+        return "TLS13-AES128-GCM-SHA256:"
+               "TLS13-AES256-GCM-SHA384:"
+               "TLS13-CHACHA20-POLY1305-SHA256";
+    }
+}
+
+/**
+ * Determine version range from configuration
+ */
+static void map_version_range(const priority_config_t *config,
+                               int *min_version, int *max_version)
+{
+    *min_version = 0;
+    *max_version = 0;
+
+    uint32_t versions = config->enabled_versions;
+
+    // Determine minimum version (lowest enabled)
+    if (versions & (1U << TLS_VERSION_SSL3)) {
+        *min_version = 0x0300;  // SSL 3.0 (not recommended!)
+    } else if (versions & (1U << TLS_VERSION_TLS10)) {
+        *min_version = 0x0301;  // TLS 1.0
+    } else if (versions & (1U << TLS_VERSION_TLS11)) {
+        *min_version = 0x0302;  // TLS 1.1
+    } else if (versions & (1U << TLS_VERSION_TLS12)) {
+        *min_version = 0x0303;  // TLS 1.2
+    } else if (versions & (1U << TLS_VERSION_TLS13)) {
+        *min_version = 0x0304;  // TLS 1.3
+    }
+
+    // Determine maximum version (highest enabled)
+    if (versions & (1U << TLS_VERSION_TLS13)) {
+        *max_version = 0x0304;  // TLS 1.3
+    } else if (versions & (1U << TLS_VERSION_TLS12)) {
+        *max_version = 0x0303;  // TLS 1.2
+    } else if (versions & (1U << TLS_VERSION_TLS11)) {
+        *max_version = 0x0302;  // TLS 1.1
+    } else if (versions & (1U << TLS_VERSION_TLS10)) {
+        *max_version = 0x0301;  // TLS 1.0
+    } else if (versions & (1U << TLS_VERSION_SSL3)) {
+        *max_version = 0x0300;  // SSL 3.0
+    }
+}
+
+/**
+ * Build options flags from modifiers
+ */
+static long map_options_flags(const priority_config_t *config)
+{
+    long options = 0;
+
+    if (config->server_precedence) {
+        options |= 0x00400000L;  // SSL_OP_CIPHER_SERVER_PREFERENCE
+    }
+
+    // Disable specific versions if excluded
+    if (config->disabled_versions & (1U << TLS_VERSION_SSL3)) {
+        options |= 0x02000000L;  // SSL_OP_NO_SSLv3
+    }
+    if (config->disabled_versions & (1U << TLS_VERSION_TLS10)) {
+        options |= 0x04000000L;  // SSL_OP_NO_TLSv1
+    }
+    if (config->disabled_versions & (1U << TLS_VERSION_TLS11)) {
+        options |= 0x10000000L;  // SSL_OP_NO_TLSv1_1
+    }
+    if (config->disabled_versions & (1U << TLS_VERSION_TLS12)) {
+        options |= 0x08000000L;  // SSL_OP_NO_TLSv1_2
+    }
+
+    // Other options
+    if (config->compat_mode) {
+        options |= 0x00000004L;  // SSL_OP_ALL (compatibility mode)
+    }
+
+    return options;
+}
+
 int priority_map_to_wolfssl(const priority_config_t *config,
                              wolfssl_config_t *wolfssl_cfg)
 {
-    // TODO: Implement in next commit
-    (void)config;
-    (void)wolfssl_cfg;
-    return PRIORITY_E_UNSUPPORTED;
+    if (config == nullptr || wolfssl_cfg == nullptr) {
+        set_last_error(PRIORITY_E_NULL_POINTER, 0, nullptr,
+                      "nullptr parameter to priority_map_to_wolfssl");
+        return PRIORITY_E_NULL_POINTER;
+    }
+
+    // Initialize output
+    wolfssl_config_init(wolfssl_cfg);
+
+    // Build TLS 1.2 cipher list
+    if (config->enabled_versions & ((1U << TLS_VERSION_TLS10) |
+                                     (1U << TLS_VERSION_TLS11) |
+                                     (1U << TLS_VERSION_TLS12))) {
+        const char *base_ciphers = map_base_keyword_to_ciphers(config->base_keyword);
+        snprintf(wolfssl_cfg->cipher_list, sizeof(wolfssl_cfg->cipher_list),
+                 "%s", base_ciphers);
+        wolfssl_cfg->has_cipher_list = true;
+    }
+
+    // Build TLS 1.3 cipher suites
+    if (config->enabled_versions & (1U << TLS_VERSION_TLS13)) {
+        const char *tls13_ciphers = map_base_keyword_to_tls13_ciphers(config->base_keyword);
+        snprintf(wolfssl_cfg->ciphersuites, sizeof(wolfssl_cfg->ciphersuites),
+                 "%s", tls13_ciphers);
+        wolfssl_cfg->has_ciphersuites = true;
+    }
+
+    // Set version range
+    map_version_range(config, &wolfssl_cfg->min_version, &wolfssl_cfg->max_version);
+    if (wolfssl_cfg->min_version != 0 || wolfssl_cfg->max_version != 0) {
+        wolfssl_cfg->has_version_range = true;
+    }
+
+    // Build options flags
+    wolfssl_cfg->options = map_options_flags(config);
+
+    return PRIORITY_E_SUCCESS;
 }
 
 /* ============================================================================
