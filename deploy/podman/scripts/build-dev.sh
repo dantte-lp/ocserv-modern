@@ -354,6 +354,7 @@ buildah run "$container" -- rm -rf /tmp/build
 log_info "Creating developer user..."
 buildah run "$container" -- bash -c "
     useradd -m -s /bin/bash -u 1000 -U developer
+    mkdir -p /etc/sudoers.d
     echo 'developer ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/developer
     chmod 0440 /etc/sudoers.d/developer
 "
