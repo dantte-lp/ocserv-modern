@@ -101,9 +101,43 @@ The protocol supports multiple authentication mechanisms:
 ### Target Version
 
 **Cisco Secure Client 5.x+** (formerly AnyConnect)
-- Latest protocol features
-- Modern cipher suites
-- DTLS 1.3 support (future)
+- Latest protocol features (v5.1.2.42 analyzed)
+- Modern cipher suites (TLS 1.3, ChaCha20-Poly1305)
+- DTLS 1.2 primary, DTLS 1.3 support (future)
+- CiscoSSL wrapper around OpenSSL 1.1.1+
+
+### Cryptographic Implementation Analysis
+
+Based on reverse engineering of Cisco Secure Client 5.1.2.42:
+
+**TLS Protocol Support**:
+- TLS 1.3 (primary, default for new connections)
+- TLS 1.2 (full fallback support)
+- TLS 1.1 (legacy, minimal support)
+- TLS 1.0 (not supported, removed)
+
+**DTLS Protocol Support**:
+- DTLS 1.2 (primary for UDP tunnel)
+- DTLS 1.0 (legacy, minimal support)
+
+**Cipher Suites (Priority Order)**:
+1. TLS_AES_256_GCM_SHA384 (TLS 1.3)
+2. TLS_CHACHA20_POLY1305_SHA256 (TLS 1.3)
+3. TLS_AES_128_GCM_SHA256 (TLS 1.3)
+4. ECDHE-RSA-AES256-GCM-SHA384 (TLS 1.2)
+5. ECDHE-RSA-CHACHA20-POLY1305 (TLS 1.2)
+6. ECDHE-RSA-AES128-GCM-SHA256 (TLS 1.2)
+
+**Key Exchange**:
+- ECDHE with P-256 (secp256r1) preferred
+- ECDHE with P-384 (secp384r1) alternative
+- X25519 support (modern deployments)
+
+**Certificate Requirements**:
+- X.509 v3 certificates
+- RSA-PSS signatures preferred
+- Subject Alternative Name (SAN) mandatory
+- Certificate chain validation (strict)
 
 ### Compatibility Requirements
 
@@ -121,21 +155,42 @@ For ocserv-modern v2.0.0:
    - Must match exact Cisco expectations
    - Subject Alternative Name (SAN) requirements
    - Certificate chain validation order
+   - RSA-PSS signature algorithm preferred
+   - Minimum key lengths: RSA 2048-bit, ECC 256-bit
 
 2. **XML response parsing**
    - Specific tag ordering expected
    - Case sensitivity in some fields
    - Whitespace handling
+   - DOCTYPE and encoding declarations
 
 3. **DTLS fallback behavior**
    - Must attempt DTLS before TCP-only mode
-   - Specific timeout values
-   - Cookie exchange timing
+   - Specific timeout values (implementation-dependent)
+   - Cookie exchange timing (HelloVerifyRequest)
+   - MTU discovery and fragmentation handling
 
 4. **Session persistence**
    - Session ID format requirements
    - Cookie expiration handling
    - Reconnection behavior
+   - Session resumption with tickets (TLS 1.3)
+   - Master secret preservation for DTLS
+
+5. **HTTP Headers (Critical)**
+   - `X-CSTP-Version: 1` (protocol v1.2 indicator)
+   - `X-CSTP-Protocol: Copyright (c) 2004 Cisco Systems, Inc.` (exact string)
+   - `X-CSTP-Address-Type: IPv6,IPv4` (dual-stack)
+   - `X-CSTP-Full-IPv6-Capability: true`
+   - `X-DTLS-Master-Secret` for UDP tunnel establishment
+   - `X-DTLS12-CipherSuite` for cipher negotiation
+
+6. **Authentication Flow**
+   - Aggregate authentication framework
+   - Multi-factor authentication support
+   - XML-based credential exchange
+   - Session cookie format: `webvpn=<encrypted-token>`
+   - SAML/OAuth 2.0/OIDC integration points
 
 ---
 
