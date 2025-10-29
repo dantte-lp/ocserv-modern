@@ -333,6 +333,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Disable certificate verification for PoC (self-signed certs)
+    ret = tls_context_set_verify(ctx, false, nullptr, nullptr);
+    if (ret != TLS_E_SUCCESS) {
+        fprintf(stderr, "Failed to disable verification: %s\n", tls_strerror(ret));
+        tls_global_deinit();
+        return 1;
+    }
+
     // Connect to server
     int sockfd = connect_to_server(host, port, verbose);
     if (sockfd < 0) {

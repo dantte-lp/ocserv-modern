@@ -15,6 +15,10 @@ tests/poc/tls_poc_client
 # PoC binaries (built in project root)
 poc-server
 poc-client
+poc-server-gnutls
+poc-server-wolfssl
+poc-client-gnutls
+poc-client-wolfssl
 
 # Benchmark results
 *.json

@@ -230,6 +230,10 @@ void tls_context_free(tls_context_t *ctx) {
         gnutls_dh_params_deinit(ctx->dh_params);
     }
 
+    // Free stored certificate and key paths
+    free(ctx->cert_file_path);
+    free(ctx->key_file_path);
+
     free(ctx);
 }
 
@@ -239,15 +243,24 @@ void tls_context_free(tls_context_t *ctx) {
         return TLS_E_INVALID_PARAMETER;
     }
 
-    // Load certificate file (will auto-detect PEM/DER format)
-    int ret = gnutls_certificate_set_x509_key_file(ctx->x509_cred,
-                                                     cert_file,
-                                                     cert_file, // Same file for now
-                                                     GNUTLS_X509_FMT_PEM);
-    if (ret != GNUTLS_E_SUCCESS) {
-        fprintf(stderr, "Failed to load certificate from %s: %s\n",
-                cert_file, gnutls_strerror(ret));
-        return tls_gnutls_map_error(ret);
+    // Store certificate path for deferred loading
+    free(ctx->cert_file_path);
+    ctx->cert_file_path = strdup(cert_file);
+    if (ctx->cert_file_path == nullptr) {
+        return TLS_E_MEMORY_ERROR;
+    }
+
+    // If key file is already set, load both now
+    if (ctx->key_file_path != nullptr) {
+        int ret = gnutls_certificate_set_x509_key_file(ctx->x509_cred,
+                                                         ctx->cert_file_path,
+                                                         ctx->key_file_path,
+                                                         GNUTLS_X509_FMT_PEM);
+        if (ret != GNUTLS_E_SUCCESS) {
+            fprintf(stderr, "Failed to load certificate from %s: %s\n",
+                    ctx->cert_file_path, gnutls_strerror(ret));
+            return tls_gnutls_map_error(ret);
+        }
     }
 
     return TLS_E_SUCCESS;
@@ -259,12 +272,25 @@ void tls_context_free(tls_context_t *ctx) {
         return TLS_E_INVALID_PARAMETER;
     }
 
-    // Note: In GnuTLS, certificates and keys are typically loaded together
-    // via gnutls_certificate_set_x509_key_file(). This function is provided
-    // for API compatibility but may require refactoring to load cert+key separately.
+    // Store key path for deferred loading
+    free(ctx->key_file_path);
+    ctx->key_file_path = strdup(key_file);
+    if (ctx->key_file_path == nullptr) {
+        return TLS_E_MEMORY_ERROR;
+    }
 
-    // For now, we assume the caller will use tls_context_set_cert_file()
-    // which loads both cert and key from the same or separate files.
+    // If cert file is already set, load both now
+    if (ctx->cert_file_path != nullptr) {
+        int ret = gnutls_certificate_set_x509_key_file(ctx->x509_cred,
+                                                         ctx->cert_file_path,
+                                                         ctx->key_file_path,
+                                                         GNUTLS_X509_FMT_PEM);
+        if (ret != GNUTLS_E_SUCCESS) {
+            fprintf(stderr, "Failed to load key from %s: %s\n",
+                    ctx->key_file_path, gnutls_strerror(ret));
+            return tls_gnutls_map_error(ret);
+        }
+    }
 
     return TLS_E_SUCCESS;
 }

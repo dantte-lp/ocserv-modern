@@ -62,6 +62,10 @@ struct tls_context {
     bool is_dtls;
     bool verify_peer;
 
+    /* Certificate and key paths (deferred loading for GnuTLS) */
+    char *cert_file_path;
+    char *key_file_path;
+
     /* Callbacks */
     tls_cert_verify_func_t verify_callback;
     void *verify_userdata;
