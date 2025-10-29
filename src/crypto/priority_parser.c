@@ -901,39 +901,177 @@ int priority_map_to_wolfssl(const priority_config_t *config,
 }
 
 /* ============================================================================
- * Phase 4: Application (to be implemented)
+ * Phase 4: Application
  * ============================================================================ */
 
 int priority_apply_wolfssl_config(void *wolf_ctx,
                                    const wolfssl_config_t *wolfssl_cfg)
 {
-    // TODO: Implement in next commit
-    (void)wolf_ctx;
-    (void)wolfssl_cfg;
-    return PRIORITY_E_UNSUPPORTED;
+    if (wolf_ctx == nullptr || wolfssl_cfg == nullptr) {
+        set_last_error(PRIORITY_E_NULL_POINTER, 0, nullptr,
+                      "nullptr parameter to priority_apply_wolfssl_config");
+        return PRIORITY_E_NULL_POINTER;
+    }
+
+    WOLFSSL_CTX *ctx = (WOLFSSL_CTX *)wolf_ctx;
+
+    // Apply TLS 1.2 cipher list
+    if (wolfssl_cfg->has_cipher_list && wolfssl_cfg->cipher_list[0] != '\0') {
+        int ret = wolfSSL_CTX_set_cipher_list(ctx, wolfssl_cfg->cipher_list);
+        if (ret != SSL_SUCCESS) {
+            set_last_error(PRIORITY_E_MAPPER_FAILED, 0, nullptr,
+                          "Failed to set wolfSSL cipher list");
+            return PRIORITY_E_MAPPER_FAILED;
+        }
+    }
+
+    // Apply TLS 1.3 cipher suites
+    if (wolfssl_cfg->has_ciphersuites && wolfssl_cfg->ciphersuites[0] != '\0') {
+        #ifdef WOLFSSL_TLS13
+        int ret = wolfSSL_CTX_set_ciphersuites(ctx, wolfssl_cfg->ciphersuites);
+        if (ret != SSL_SUCCESS) {
+            set_last_error(PRIORITY_E_MAPPER_FAILED, 0, nullptr,
+                          "Failed to set wolfSSL TLS 1.3 cipher suites");
+            return PRIORITY_E_MAPPER_FAILED;
+        }
+        #endif
+    }
+
+    // Apply version range
+    if (wolfssl_cfg->has_version_range) {
+        if (wolfssl_cfg->min_version != 0) {
+            int ret = wolfSSL_CTX_SetMinVersion(ctx, wolfssl_cfg->min_version);
+            if (ret != SSL_SUCCESS) {
+                set_last_error(PRIORITY_E_MAPPER_FAILED, 0, nullptr,
+                              "Failed to set minimum TLS version");
+                return PRIORITY_E_MAPPER_FAILED;
+            }
+        }
+        // Note: wolfSSL doesn't have SetMaxVersion, so we use options flags
+        // to disable unwanted versions
+    }
+
+    // Apply options flags
+    if (wolfssl_cfg->options != 0) {
+        long result = wolfSSL_CTX_set_options(ctx, wolfssl_cfg->options);
+        (void)result;  // wolfSSL_CTX_set_options returns new options, not error code
+    }
+
+    return PRIORITY_E_SUCCESS;
 }
 
 /* ============================================================================
- * Public API (to be implemented)
+ * Public API
  * ============================================================================ */
 
 int tls_set_priority_string(tls_context_t *ctx, const char *priority)
 {
-    // TODO: Implement in next commit
-    (void)ctx;
-    (void)priority;
-    return PRIORITY_E_UNSUPPORTED;
+    if (ctx == nullptr || priority == nullptr) {
+        set_last_error(PRIORITY_E_NULL_POINTER, 0, nullptr,
+                      "nullptr parameter to tls_set_priority_string");
+        return PRIORITY_E_NULL_POINTER;
+    }
+
+    // Get wolfSSL context
+    // Note: This requires access to tls_context internals
+    // For now, we assume ctx->wolf_ctx is accessible
+    // In production, this would use a proper accessor function
+    struct tls_context *ctx_internal = (struct tls_context *)ctx;
+    if (ctx_internal->wolf_ctx == nullptr) {
+        set_last_error(PRIORITY_E_MAPPER_FAILED, 0, nullptr,
+                      "Context does not have wolfSSL backend");
+        return PRIORITY_E_MAPPER_FAILED;
+    }
+
+    // Phase 1: Tokenize
+    token_list_t tokens;
+    int ret = priority_tokenize(priority, &tokens);
+    if (ret != PRIORITY_E_SUCCESS) {
+        return ret;
+    }
+
+    // Phase 2: Parse
+    priority_config_t config;
+    ret = priority_parse(&tokens, &config);
+    if (ret != PRIORITY_E_SUCCESS) {
+        return ret;
+    }
+
+    // Phase 3: Map to wolfSSL
+    wolfssl_config_t wolfssl_cfg;
+    ret = priority_map_to_wolfssl(&config, &wolfssl_cfg);
+    if (ret != PRIORITY_E_SUCCESS) {
+        return ret;
+    }
+
+    // Phase 4: Apply to context
+    ret = priority_apply_wolfssl_config(ctx_internal->wolf_ctx, &wolfssl_cfg);
+    if (ret != PRIORITY_E_SUCCESS) {
+        return ret;
+    }
+
+    // Store priority string in context for reference
+    if (ctx_internal->priority_string != nullptr) {
+        free(ctx_internal->priority_string);
+    }
+    ctx_internal->priority_string = strdup(priority);
+
+    return PRIORITY_E_SUCCESS;
 }
 
 int tls_validate_priority_string(const char *priority,
                                   char *error_msg,
                                   size_t error_msg_len)
 {
-    // TODO: Implement in next commit
-    (void)priority;
-    (void)error_msg;
-    (void)error_msg_len;
-    return PRIORITY_E_UNSUPPORTED;
+    if (priority == nullptr) {
+        if (error_msg != nullptr && error_msg_len > 0) {
+            snprintf(error_msg, error_msg_len, "nullptr priority string");
+        }
+        return PRIORITY_E_NULL_POINTER;
+    }
+
+    // Phase 1: Tokenize
+    token_list_t tokens;
+    int ret = priority_tokenize(priority, &tokens);
+    if (ret != PRIORITY_E_SUCCESS) {
+        if (error_msg != nullptr && error_msg_len > 0) {
+            priority_error_info_t err_info;
+            priority_get_last_error(&err_info);
+            snprintf(error_msg, error_msg_len, "%s", err_info.error_message);
+        }
+        return ret;
+    }
+
+    // Phase 2: Parse
+    priority_config_t config;
+    ret = priority_parse(&tokens, &config);
+    if (ret != PRIORITY_E_SUCCESS) {
+        if (error_msg != nullptr && error_msg_len > 0) {
+            priority_error_info_t err_info;
+            priority_get_last_error(&err_info);
+            snprintf(error_msg, error_msg_len, "%s", err_info.error_message);
+        }
+        return ret;
+    }
+
+    // Phase 3: Map to wolfSSL (validation only, don't apply)
+    wolfssl_config_t wolfssl_cfg;
+    ret = priority_map_to_wolfssl(&config, &wolfssl_cfg);
+    if (ret != PRIORITY_E_SUCCESS) {
+        if (error_msg != nullptr && error_msg_len > 0) {
+            priority_error_info_t err_info;
+            priority_get_last_error(&err_info);
+            snprintf(error_msg, error_msg_len, "%s", err_info.error_message);
+        }
+        return ret;
+    }
+
+    // Validation successful
+    if (error_msg != nullptr && error_msg_len > 0) {
+        snprintf(error_msg, error_msg_len, "Valid priority string");
+    }
+
+    return PRIORITY_E_SUCCESS;
 }
 
 /* ============================================================================
