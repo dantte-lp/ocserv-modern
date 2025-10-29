@@ -1,9 +1,13 @@
 # TODO Tracking - ocserv-modern
 
-**Last Updated**: 2025-10-29 (Evening Update - mimalloc v3 testing complete)
+**Last Updated**: 2025-10-29 (Evening Update - Sprint 2 Continuation)
 **Current Sprint**: Sprint 2 (Development Tools & wolfSSL Integration)
 **Active Development Version**: 2.0.0-alpha.2
 **Phase**: Phase 1 - TLS Backend Implementation (IN PROGRESS)
+**Current Branch**: master
+**Latest Commit**: 61e6cea - docs(architecture): Document TLS version refactoring
+
+**NOTE**: This file tracks Sprint 2 details. For complete project tracking, see `/opt/projects/repositories/ocserv-modern/TODO.md`
 
 ---
 
@@ -158,30 +162,29 @@ This is the first major release of ocserv-modern, representing a complete migrat
 - [x] **GO/NO-GO decision**: ✅ **GO APPROVED** (2025-10-29)
 - [x] **Comprehensive documentation**: `docs/issues/ISSUE-005-MIMALLOC_V3_COMPREHENSIVE_TESTING.md`
 - **Result**: mimalloc v3.1.5 VALIDATED for production use
-- **Sprint 2**: UNBLOCKED - proceed with remaining tasks
+- **Sprint 2**: UNBLOCKED - proceed with unit tests (NEXT TASK)
 
 ###### Pending (Next Tasks)
 
-**Library Integration Testing** (5 SP)
-- [ ] libuv 1.51.0 integration tests (not yet integrated into codebase)
-- [ ] cJSON 1.7.19 integration tests (not yet integrated into codebase)
-- [ ] wolfSSL performance validation (verify --disable-sp-asm impact)
-- [ ] Benchmark vs Sprint 1 baseline
-- [ ] Ensure ≥45% performance target met
+**Priority Parser Unit Tests** (3 SP) - **NEXT TASK - HIGH PRIORITY**
+- [ ] Tokenizer tests (empty string, keywords, modifiers, complex strings)
+- [ ] Parser tests (base keywords, modifiers, versions, ciphers, conflicts)
+- [ ] Mapper tests (TLS 1.3/1.2 ciphers, version range, options flags)
+- [ ] Integration tests (end-to-end, real-world ocserv strings)
+- [ ] Test framework setup (Unity, CMake, Valgrind, coverage)
 
-**Priority String Parser Implementation** (8 SP)
-- [ ] Design parser architecture
-- [ ] Implement GnuTLS priority string parsing
-- [ ] Map to wolfSSL configuration
-- [ ] Unit tests for parser
+**Session Caching Implementation** (5 SP)
+- [ ] Design session cache data structures
+- [ ] Implement store/retrieve/remove callbacks
+- [ ] Session timeout enforcement
+- [ ] Address-based validation (prevent hijacking)
+- [ ] Thread-safe cache access
+- [ ] Performance testing (>5x handshake improvement)
+- [ ] Unit tests
 - [ ] Integration tests
-- [ ] Documentation
 
-**Sprint 2 Risks** (Updated 2025-10-29 Afternoon):
-- 🔴 CRITICAL: mimalloc v3 comprehensive testing incomplete (probability: 100%, active)
-  - Mitigation: 5-phase testing plan in place, GO/NO-GO decision by 2025-11-13
-  - Fallback: Downgrade to v2.2.4 if issues found
-  - **BLOCKING**: Sprint 2 completion
+**Sprint 2 Risks** (Updated 2025-10-29 Evening):
+- 🟢 ~~CRITICAL: mimalloc v3 comprehensive testing~~ - **RESOLVED (GO approved)**
 - ✅ ~~HIGH: Container build may fail~~ - **RESOLVED** (sudoers.d fix applied)
 - ⚠️ MEDIUM: Ceedling/Unity test framework not found (probability: 100%, occurred)
   - Impact: Unit test builds disabled by CMake
