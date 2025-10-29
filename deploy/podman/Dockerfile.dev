@@ -3,12 +3,20 @@ FROM oraclelinux:10
 LABEL maintainer="ocserv-modern development team"
 LABEL description="Development environment for ocserv-modern with wolfSSL and modern C libraries"
 
+# Build arguments for tool versions
+ARG CMAKE_VERSION=4.1.2
+ARG DOXYGEN_VERSION=1.15.0
+ARG UNITY_VERSION=2.6.1
+ARG CMOCK_VERSION=2.6.0
+ARG CEEDLING_VERSION=1.0.1
+ARG WOLFSSL_VERSION=5.8.2
+ARG LIBUV_VERSION=1.48.0
+
 # Install base development tools
 RUN dnf install -y \
     gcc \
     gcc-c++ \
     make \
-    cmake \
     autoconf \
     automake \
     libtool \
@@ -19,9 +27,11 @@ RUN dnf install -y \
     valgrind \
     strace \
     wget \
+    curl \
     tar \
     xz \
     bzip2 \
+    patch \
     && dnf clean all
 
 # Install dependencies (only available packages in OL10)
@@ -40,10 +50,83 @@ RUN dnf install -y \
     p11-kit-devel \
     && dnf clean all
 
-# Build and install wolfSSL from source
-ARG WOLFSSL_VERSION=5.8.2
+# Install code quality and documentation tools
+RUN dnf install -y \
+    clang-tools-extra \
+    cppcheck \
+    graphviz \
+    python3 \
+    python3-pip \
+    ruby \
+    ruby-devel \
+    rubygems \
+    && dnf clean all
+
+# Install Ruby gems for Ceedling
+RUN gem install --no-document \
+    rake \
+    thor \
+    constructor \
+    deep_merge
+
+# Build and install CMake 4.1.2 from source
 RUN cd /tmp && \
-    wget https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}-stable.tar.gz && \
+    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz && \
+    tar xzf cmake-${CMAKE_VERSION}.tar.gz && \
+    cd cmake-${CMAKE_VERSION} && \
+    ./bootstrap --prefix=/usr/local --parallel=$(nproc) && \
+    make -j$(nproc) && \
+    make install && \
+    cd /tmp && rm -rf cmake-*
+
+# Build and install Doxygen 1.15.0 from source
+RUN cd /tmp && \
+    wget https://github.com/doxygen/doxygen/archive/refs/tags/Release_${DOXYGEN_VERSION//./_}.tar.gz && \
+    tar xzf Release_${DOXYGEN_VERSION//./_}.tar.gz && \
+    cd doxygen-Release_${DOXYGEN_VERSION//./_} && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    cd /tmp && rm -rf doxygen-* Release_*
+
+# Install Unity testing framework v2.6.1
+RUN cd /tmp && \
+    wget https://github.com/ThrowTheSwitch/Unity/archive/refs/tags/v${UNITY_VERSION}.tar.gz && \
+    tar xzf v${UNITY_VERSION}.tar.gz && \
+    cd Unity-${UNITY_VERSION} && \
+    mkdir -p /usr/local/include/unity && \
+    mkdir -p /usr/local/src/unity && \
+    cp src/unity.h src/unity_internals.h /usr/local/include/unity/ && \
+    cp src/unity.c /usr/local/src/unity/ && \
+    cp -r extras /usr/local/src/unity/ && \
+    cd /tmp && rm -rf Unity-* v${UNITY_VERSION}.tar.gz
+
+# Install CMock v2.6.0
+RUN cd /tmp && \
+    wget https://github.com/ThrowTheSwitch/CMock/archive/refs/tags/v${CMOCK_VERSION}.tar.gz && \
+    tar xzf v${CMOCK_VERSION}.tar.gz && \
+    cd CMock-${CMOCK_VERSION} && \
+    mkdir -p /usr/local/lib/cmock /usr/local/src/cmock && \
+    cp -r lib/* /usr/local/lib/cmock/ && \
+    cp -r src/* /usr/local/src/cmock/ && \
+    cd /tmp && rm -rf CMock-* v${CMOCK_VERSION}.tar.gz
+
+# Install Ceedling v1.0.1
+RUN gem install --no-document ceedling -v ${CEEDLING_VERSION}
+
+# Install vcpkg package manager
+RUN cd /opt && \
+    git clone --depth 1 https://github.com/microsoft/vcpkg.git && \
+    cd vcpkg && \
+    ./bootstrap-vcpkg.sh && \
+    ln -s /opt/vcpkg/vcpkg /usr/local/bin/vcpkg
+
+# Build and install wolfSSL from source (GPLv3!)
+RUN cd /tmp && \
+    wget https://github.com/wolfSSL/wolfssl/archive/refs/tags/v${WOLFSSL_VERSION}-stable.tar.gz && \
     tar xzf v${WOLFSSL_VERSION}-stable.tar.gz && \
     cd wolfssl-${WOLFSSL_VERSION}-stable && \
     ./autogen.sh && \
@@ -66,12 +149,21 @@ RUN cd /tmp && \
         --enable-sp-asm \
         --enable-opensslextra \
         --enable-opensslall \
+        --enable-curve25519 \
+        --enable-ed25519 \
+        --enable-sha3 \
+        --enable-shake256 \
+        --enable-postauth \
+        --enable-hrrcookie \
+        --enable-quic \
+        --enable-debug \
         --prefix=/usr/local \
-        CFLAGS="-O3 -march=native -mtune=native" && \
+        CFLAGS="-O2 -g -fstack-protector-strong" \
+        LDFLAGS="-Wl,-z,relro -Wl,-z,now" && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
-    cd / && rm -rf /tmp/wolfssl-*
+    cd /tmp && rm -rf wolfssl-*
 
 # Build and install libuv from source
 ARG LIBUV_VERSION=1.48.0

@@ -32,8 +32,25 @@ tests/certs/*.csr
 
 # Build directories
 build/
+build-quick/
 obj/
 bin/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# Ceedling build artifacts
+build/ceedling/
+.ceedling/
+
+# Doxygen output
+docs/api/
+html/
+latex/
 
 # Editor files
 *.swp

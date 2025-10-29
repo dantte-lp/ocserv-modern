@@ -1,0 +1,198 @@
+# Ceedling project configuration for ocserv-modern
+# Unity/CMock-based unit testing framework
+
+---
+:project:
+  :name: ocserv-modern
+  :build_root: build/ceedling
+  :use_exceptions: FALSE
+  :use_test_preprocessor: TRUE
+  :use_auxiliary_dependencies: TRUE
+  :use_deep_dependencies: FALSE
+  :generate_deep_dependencies: TRUE
+  :test_file_prefix: test_
+  :options_paths:
+    - tests/unit/support
+  :release_build: TRUE
+
+# Path configuration
+:paths:
+  :test:
+    - tests/unit/**
+  :source:
+    - src/crypto/**
+  :support:
+    - tests/unit/support/**
+  :include:
+    - src/crypto/**
+    - /usr/local/include/**
+
+# File patterns
+:files:
+  :test:
+    - tests/unit/**/test_*.c
+  :source:
+    - src/crypto/**/*.c
+  :include:
+    - src/crypto/**/*.h
+
+# Environment configuration
+:environment:
+  - :mcu: native
+  - :board: native
+
+# Extension configuration
+:extension:
+  :executable: .out
+
+# Test compilation flags (C23 standard)
+:flags:
+  :test:
+    :compile:
+      :*:
+        - -std=c23
+        - -Wall
+        - -Wextra
+        - -Wpedantic
+        - -g
+        - -O0
+        - -DDEBUG
+        - -DUNIT_TEST
+        - -fprofile-arcs
+        - -ftest-coverage
+    :link:
+      :*:
+        - -lgcov
+        - --coverage
+        - -lm
+
+# Defines for testing
+:defines:
+  :test:
+    - TEST
+    - UNITY_INCLUDE_DOUBLE
+    - UNITY_SUPPORT_64
+  :source:
+    - ""
+
+# CMock configuration
+:cmock:
+  :plugins:
+    - :ignore
+    - :callback
+    - :return_thru_ptr
+  :treat_as:
+    uint8: HEX8
+    uint16: HEX16
+    uint32: HEX32
+    int8: INT8
+    int16: INT16
+    int32: INT32
+  :mock_prefix: mock_
+  :when_no_prototypes: :warn
+  :enforce_strict_ordering: TRUE
+  :treat_as_void:
+    - void
+  :treat_externs: :include
+  :verbosity: 3
+  :unity_helper_path: tests/unit/support
+
+# Unity configuration
+:unity:
+  :defines:
+    - UNITY_EXCLUDE_FLOAT
+    - UNITY_INCLUDE_DOUBLE
+    - UNITY_SUPPORT_64
+    - UNITY_OUTPUT_COLOR
+
+# gcov configuration for coverage
+:gcov:
+  :utilities:
+    - gcovr
+  :reports:
+    - HtmlDetailed
+    - Text
+  :gcovr:
+    :report_root: "."
+    :report_exclude: ".*test.*"
+    :sort_percentage: TRUE
+    :sort_uncovered: TRUE
+    :html_medium_threshold: 75
+    :html_high_threshold: 90
+
+# Tool configuration
+:tools:
+  :test_compiler:
+    :executable: gcc
+    :name: 'GCC C23 compiler'
+    :arguments:
+      - -std=c23
+      - ${1}
+      - -I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
+      - -I"$": COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE
+      - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
+      - -c ${1}
+      - -o ${2}
+
+  :test_linker:
+    :executable: gcc
+    :name: 'GCC linker'
+    :arguments:
+      - ${1}
+      - -o ${2}
+      - ${4}
+      - ${5}
+
+  :test_fixture:
+    :executable: ${1}
+    :name: 'Test runner'
+    :arguments: []
+
+# Plugins
+:plugins:
+  :load_paths:
+    - "#{Ceedling.load_path}"
+  :enabled:
+    - stdout_pretty_tests_report
+    - module_generator
+    - gcov
+    - report_tests_pretty_stdout
+
+# Module generator configuration
+:module_generator:
+  :project_root: ./
+  :source_root: src/
+  :test_root: tests/unit/
+  :naming: :snake
+
+# Test configuration
+:test_build:
+  :use_assembly: FALSE
+
+# Gcovr tool configuration
+:tools_gcovr:
+  :executable: gcovr
+  :arguments:
+    - --root=${1}
+    - --html
+    - --html-details
+    - --output=${2}
+    - --exclude=.*test.*
+    - --exclude=.*mock.*
+    - --exclude=.*build.*
+
+# Backend selection (can be overridden via environment)
+:backend:
+  :gnutls:
+    :defines:
+      - USE_GNUTLS
+    :libraries:
+      - gnutls
+  :wolfssl:
+    :defines:
+      - USE_WOLFSSL
+    :libraries:
+      - wolfssl
+
+# Verbosity
+:verbosity: 3
