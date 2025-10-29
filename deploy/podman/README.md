@@ -46,7 +46,7 @@ Four specialized container environments:
 
 - **Rootless by default**: Enhanced security
 - **SELinux-compatible**: Proper volume labeling
-- **Latest libraries**: wolfSSL 5.8.2 (GPLv3), libuv 1.51.0, llhttp 9.3.0, cJSON 1.7.18, mimalloc 2.2.4
+- **Latest libraries**: wolfSSL 5.8.2 (GPLv3), libuv 1.51.0, llhttp 9.3.0, cJSON 1.7.19, mimalloc 3.1.5
 - **Modern build system**: CMake 4.1.2 with C23 support
 - **Comprehensive testing**: Unity 2.6.1, CMock 2.6.0, Ceedling 1.0.1
 - **Code quality tools**: clang-format, clang-tidy, cppcheck

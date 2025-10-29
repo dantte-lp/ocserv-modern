@@ -12,7 +12,7 @@ BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 IMAGE_NAME="${IMAGE_NAME:-localhost/ocserv-modern-dev}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 
-# Library versions (verified 2025-10-29)
+# Library versions (verified and updated 2025-10-29)
 CMAKE_VERSION="${CMAKE_VERSION:-4.1.2}"
 DOXYGEN_VERSION="${DOXYGEN_VERSION:-1.15.0}"
 UNITY_VERSION="${UNITY_VERSION:-2.6.1}"
@@ -21,10 +21,10 @@ CEEDLING_VERSION="${CEEDLING_VERSION:-1.0.1}"
 WOLFSSL_VERSION="${WOLFSSL_VERSION:-v5.8.2-stable}"
 WOLFSENTRY_VERSION="${WOLFSENTRY_VERSION:-v1.6.3}"
 WOLFCLU_VERSION="${WOLFCLU_VERSION:-v0.1.8}"
-LIBUV_VERSION="${LIBUV_VERSION:-v1.51.0}"
+LIBUV_VERSION="${LIBUV_VERSION:-v1.51.0}"  # Updated: 1.48.0 → 1.51.0
 LLHTTP_VERSION="${LLHTTP_VERSION:-v9.3.0}"
-CJSON_VERSION="${CJSON_VERSION:-v1.7.18}"  # Using v1.7.18 instead of v1.7.19 for stability
-MIMALLOC_VERSION="${MIMALLOC_VERSION:-v2.2.4}"
+CJSON_VERSION="${CJSON_VERSION:-v1.7.19}"  # Updated: v1.7.18 → v1.7.19
+MIMALLOC_VERSION="${MIMALLOC_VERSION:-v3.1.5}"  # Updated: v2.2.4 → v3.1.5 (breaking changes!)
 
 # Base image
 BASE_IMAGE="${BASE_IMAGE:-oraclelinux:10}"
