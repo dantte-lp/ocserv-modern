@@ -1122,6 +1122,1021 @@ Integrate wolfCLU v0.1.8 command-line utilities for:
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2025-10-29 (Added wolfSSL ecosystem stories)
+## Phase 2: REST API and WebUI Integration
+
+### US-045: REST API Architecture Design
+
+**Story**: As a developer, I want a REST API architecture designed so that the implementation follows best practices and integrates cleanly with existing ocserv code.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 12
+**Story Points**: 5
+**Risk**: MEDIUM
+
+**Description**:
+Design comprehensive REST API architecture based on /opt/projects/repositories/ocserv-ref/docs/ocserv-refactoring-plan-rest-api.md:
+- Embedded HTTP server approach (libmicrohttpd)
+- REST + WebSocket hybrid architecture
+- Integration with existing occtl backend functions
+- Security architecture (JWT + mTLS + RBAC)
+- API versioning strategy (/api/v1/)
+
+**Acceptance Criteria**:
+- [ ] Architecture document created (docs/architecture/REST_API_DESIGN.md)
+- [ ] API endpoint specification defined (OpenAPI 3.0)
+- [ ] Integration points with existing code identified
+- [ ] Security model documented (authentication + authorization)
+- [ ] Data flow diagrams created
+- [ ] Database schema designed (if needed)
+- [ ] Error handling strategy defined
+- [ ] Rate limiting architecture documented
+- [ ] WebSocket protocol defined for real-time updates
+- [ ] Performance requirements specified
+
+**Dependencies**: US-021 (Build System Integration)
+
+**Technical Notes**:
+```c
+// Main integration point
+struct main_server_st {
+    int ctl_unix_fd;                // Existing Unix socket for occtl
+    struct MHD_Daemon *api_daemon;  // New HTTP daemon
+    int api_fd;                     // For event loop integration
+    jwt_validator_t *jwt_validator; // JWT authentication
+    rbac_context_t *rbac;           // Authorization
+    ws_manager_t *ws_manager;       // WebSocket connections
+};
+```
+
+**API Endpoints to Design**:
+- User Management: GET/POST/DELETE /api/v1/users
+- Connection Control: GET/DELETE /api/v1/connections
+- Configuration: GET/PUT /api/v1/config
+- Statistics: GET /api/v1/stats
+- Real-time: WS /api/v1/stream/connections
+
+**Reference**:
+- /opt/projects/repositories/ocserv-ref/docs/ocserv-refactoring-plan-rest-api.md
+- OpenAPI Specification 3.0
+- RFC 7519 (JWT)
+- RFC 6749 (OAuth 2.0 - for future enhancement)
+
+---
+
+### US-046: Basic REST API Implementation
+
+**Story**: As a VPN administrator, I want a REST API for user management and connection control so that I can integrate ocserv with automation tools.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 13-14
+**Story Points**: 21
+**Risk**: MEDIUM
+
+**Description**:
+Implement basic REST API using libmicrohttpd with core endpoints:
+- User management (list, create, delete users)
+- Connection management (list, disconnect sessions)
+- Server status and statistics
+- Health check endpoint
+
+**Acceptance Criteria**:
+- [ ] libmicrohttpd integrated and builds correctly
+- [ ] HTTP server starts on configurable port (default: 8443)
+- [ ] HTTPS with TLS 1.3 (using wolfSSL/GnuTLS abstraction)
+- [ ] Endpoint: GET /api/v1/health (health check)
+- [ ] Endpoint: GET /api/v1/users (list users)
+- [ ] Endpoint: POST /api/v1/users (create user)
+- [ ] Endpoint: DELETE /api/v1/users/{id} (delete user)
+- [ ] Endpoint: GET /api/v1/connections (list active connections)
+- [ ] Endpoint: DELETE /api/v1/connections/{id} (disconnect session)
+- [ ] Endpoint: GET /api/v1/stats (server statistics)
+- [ ] JSON request/response format (using cJSON)
+- [ ] Error responses follow RFC 7807 (Problem Details)
+- [ ] API versioning in URL path (/api/v1/)
+- [ ] Request logging (access log format)
+- [ ] Integration tests for all endpoints
+- [ ] Performance: Handle 100 req/sec minimum
+
+**Dependencies**: US-045 (REST API Architecture Design)
+
+**Technical Notes**:
+```c
+// libmicrohttpd request handler
+int api_request_handler(void *cls, struct MHD_Connection *connection,
+                        const char *url, const char *method,
+                        const char *version, const char *upload_data,
+                        size_t *upload_data_size, void **con_cls) {
+    // Route to appropriate handler
+    if (strcmp(url, "/api/v1/users") == 0) {
+        if (strcmp(method, "GET") == 0)
+            return api_get_users(connection);
+        else if (strcmp(method, "POST") == 0)
+            return api_create_user(connection, upload_data);
+    }
+    return MHD_NO;
+}
+```
+
+**Files to Create**:
+- `src/api/api_server.c` (NEW - main API server)
+- `src/api/api_server.h` (NEW)
+- `src/api/api_users.c` (NEW - user management endpoints)
+- `src/api/api_connections.c` (NEW - connection management)
+- `src/api/api_stats.c` (NEW - statistics endpoints)
+- `src/api/api_types.h` (NEW - API data structures)
+
+**Files to Modify**:
+- `src/main-proc.c` (integrate API server in event loop)
+- `src/config.c` (add api_enabled, api_port, api_cert config)
+- `Makefile` (add libmicrohttpd, cJSON dependencies)
+
+**Testing**:
+- Unit tests: Individual endpoint handlers
+- Integration tests: Full HTTP request/response cycle
+- Load tests: 100 concurrent requests
+- Security tests: Input validation, injection attacks
+
+**Reference**:
+- https://www.gnu.org/software/libmicrohttpd/
+- RFC 7807: Problem Details for HTTP APIs
+- https://github.com/DaveGamble/cJSON
+
+---
+
+### US-047: JWT Authentication Implementation
+
+**Story**: As a VPN administrator, I want JWT-based authentication for REST API so that stateless token-based access control is enforced.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 15
+**Story Points**: 13
+**Risk**: MEDIUM
+
+**Description**:
+Implement JWT authentication using libjwt:
+- Token generation on login
+- Token validation on every API request
+- Token refresh mechanism
+- Configurable expiration (default: 15 minutes)
+- HMAC-SHA256 or RS256 signing
+
+**Acceptance Criteria**:
+- [ ] libjwt integrated and builds correctly
+- [ ] Endpoint: POST /api/v1/auth/login (username/password → JWT)
+- [ ] Endpoint: POST /api/v1/auth/refresh (refresh token)
+- [ ] Endpoint: POST /api/v1/auth/logout (invalidate token)
+- [ ] JWT contains: sub (username), roles, iat, exp, iss, aud
+- [ ] Authorization header: `Bearer <token>` required for protected endpoints
+- [ ] Token validation middleware intercepts all requests
+- [ ] Invalid/expired tokens return 401 Unauthorized
+- [ ] Token blacklist for logout (Redis or in-memory)
+- [ ] Secret key management (config file, environment variable)
+- [ ] Token expiration configurable (api_jwt_expiry = 900)
+- [ ] Clock skew tolerance (5 minutes)
+- [ ] Audit logging for authentication events
+- [ ] Integration with existing PAM/RADIUS auth backends
+- [ ] Unit tests for token generation/validation
+- [ ] Security tests: Expired tokens, invalid signatures, replay attacks
+
+**Dependencies**: US-046 (Basic REST API Implementation)
+
+**Technical Notes**:
+```c
+// JWT structure
+typedef struct {
+    char *sub;              // "admin@example.com"
+    char **roles;           // ["admin", "user_manager"]
+    size_t roles_count;
+    time_t iat;             // Issued at
+    time_t exp;             // Expiration (iat + 900 seconds)
+    char *iss;              // "ocserv-api"
+    char *aud;              // "https://vpn-api.example.com"
+} jwt_claims_t;
+
+// Middleware
+int jwt_validate_middleware(struct MHD_Connection *conn, jwt_t **jwt_out) {
+    const char *auth_header = MHD_lookup_connection_value(
+        conn, MHD_HEADER_KIND, "Authorization");
+
+    if (!auth_header || strncmp(auth_header, "Bearer ", 7) != 0)
+        return HTTP_401_UNAUTHORIZED;
+
+    const char *token = auth_header + 7;
+    return jwt_decode(jwt_out, token, secret_key, strlen(secret_key));
+}
+```
+
+**Files to Create**:
+- `src/api/jwt_auth.c` (NEW - JWT authentication)
+- `src/api/jwt_auth.h` (NEW)
+- `src/api/api_auth.c` (NEW - /auth endpoints)
+- `src/api/token_blacklist.c` (NEW - logout tokens)
+
+**Files to Modify**:
+- `src/api/api_server.c` (add JWT middleware)
+- `src/config.c` (add api_jwt_secret, api_jwt_expiry)
+
+**Configuration**:
+```
+api-jwt-secret = file:/etc/ocserv/jwt-secret.key
+api-jwt-expiry = 900
+api-jwt-algorithm = RS256
+api-jwt-issuer = ocserv-api
+api-jwt-audience = https://vpn-api.example.com
+```
+
+**Testing**:
+- Valid token accepted
+- Expired token rejected
+- Invalid signature rejected
+- Token without required claims rejected
+- Refresh token flow works
+- Logout invalidates token
+
+**Reference**:
+- https://github.com/benmcollins/libjwt
+- RFC 7519: JSON Web Token (JWT)
+- RFC 7515: JSON Web Signature (JWS)
+
+---
+
+### US-048: mTLS Client Certificate Authentication
+
+**Story**: As a security engineer, I want mutual TLS authentication for REST API so that only authorized clients with valid certificates can access the API.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 16
+**Story Points**: 8
+**Risk**: MEDIUM
+
+**Description**:
+Implement mTLS (mutual TLS) for REST API:
+- Client certificate validation
+- CA certificate trust chain
+- Certificate-based authorization (CN/SAN mapping to roles)
+- Optional: Combine with JWT (cert + token)
+
+**Acceptance Criteria**:
+- [ ] libmicrohttpd configured for mTLS (MHD_OPTION_HTTPS_MEM_CERT)
+- [ ] Client certificate required for HTTPS connections
+- [ ] CA certificate validation working
+- [ ] Certificate revocation checking (CRL/OCSP optional)
+- [ ] Certificate CN/SAN extracted and logged
+- [ ] Certificate-based role mapping (CN → roles)
+- [ ] Configuration: api_require_client_cert = true
+- [ ] Configuration: api_client_ca_file = /etc/ocserv/api-ca.pem
+- [ ] Dual-mode: Certificate-only OR certificate + JWT
+- [ ] Error handling: Invalid cert → 495 SSL Certificate Error
+- [ ] Audit logging for certificate authentication
+- [ ] Integration tests with curl --cert/--key
+- [ ] Documentation for certificate generation
+
+**Dependencies**: US-047 (JWT Authentication Implementation)
+
+**Technical Notes**:
+```c
+// libmicrohttpd mTLS configuration
+MHD_start_daemon(
+    MHD_USE_TLS | MHD_USE_EPOLL_INTERNAL_THREAD,
+    port,
+    NULL, NULL,
+    &api_request_handler, server_ctx,
+    MHD_OPTION_HTTPS_MEM_KEY, server_key_pem,
+    MHD_OPTION_HTTPS_MEM_CERT, server_cert_pem,
+    MHD_OPTION_HTTPS_CERT_CALLBACK, &verify_client_cert_callback,
+    MHD_OPTION_END
+);
+
+// Client certificate validation
+int verify_client_cert_callback(void *cls,
+                                 const struct MHD_Connection *connection,
+                                 const gnutls_datum_t *cert_chain,
+                                 unsigned int cert_chain_length) {
+    // Extract CN from client certificate
+    // Map CN to roles: "vpn-admin" → [ROLE_ADMIN]
+    // Store in connection context
+    return 0; // Success
+}
+```
+
+**Files to Create**:
+- `src/api/mtls_auth.c` (NEW - mTLS authentication)
+- `src/api/mtls_auth.h` (NEW)
+- `docs/api/CERTIFICATE_AUTH.md` (NEW - documentation)
+
+**Files to Modify**:
+- `src/api/api_server.c` (enable mTLS mode)
+- `src/config.c` (add mTLS config options)
+
+**Testing**:
+- Valid client certificate accepted
+- Invalid certificate rejected
+- Expired certificate rejected
+- Untrusted CA rejected
+- CN/SAN extraction correct
+- Role mapping works
+
+**Reference**:
+- libmicrohttpd TLS documentation
+- RFC 5246: TLS 1.2 (mutual authentication)
+- RFC 8446: TLS 1.3 (post-handshake authentication)
+
+---
+
+### US-049: RBAC Authorization Framework
+
+**Story**: As a system administrator, I want role-based access control so that different API users have appropriate permissions.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 17
+**Story Points**: 13
+**Risk**: LOW
+
+**Description**:
+Implement RBAC (Role-Based Access Control):
+- Define roles: ADMIN, VPN_MANAGER, USER_MANAGER, READ_ONLY
+- Permission matrix: role → allowed endpoints
+- Authorization middleware
+- Configuration-based role definitions
+
+**Acceptance Criteria**:
+- [ ] RBAC framework implemented (src/api/rbac.c)
+- [ ] Roles defined: ROLE_ADMIN, ROLE_VPN_MANAGER, ROLE_USER_MANAGER, ROLE_USER, ROLE_READ_ONLY
+- [ ] Permission matrix implemented (role → HTTP method + endpoint)
+- [ ] Authorization middleware checks permissions before handler
+- [ ] Insufficient permissions → 403 Forbidden
+- [ ] Configuration file for role definitions (api-roles.conf)
+- [ ] JWT claims include roles array
+- [ ] Certificate CN can map to roles
+- [ ] Role hierarchy: ADMIN inherits all permissions
+- [ ] Audit logging for authorization failures
+- [ ] Unit tests for permission checks
+- [ ] Integration tests for all role combinations
+
+**Dependencies**: US-047 (JWT Authentication), US-048 (mTLS)
+
+**Technical Notes**:
+```c
+// Role definitions
+typedef enum {
+    ROLE_ADMIN = 1,
+    ROLE_VPN_MANAGER = 2,
+    ROLE_USER_MANAGER = 4,
+    ROLE_USER = 8,
+    ROLE_READ_ONLY = 16
+} user_role_t;
+
+// Permission check
+bool rbac_check_permission(rbac_context_t *rbac,
+                            user_role_t roles,
+                            const char *method,
+                            const char *endpoint) {
+    const permission_t *perm = rbac_lookup(rbac, method, endpoint);
+    if (!perm) return false;
+    return (perm->required_roles & roles) != 0;
+}
+
+// Example permission matrix
+// GET /api/v1/users → ROLE_ADMIN | ROLE_USER_MANAGER | ROLE_READ_ONLY
+// POST /api/v1/users → ROLE_ADMIN | ROLE_USER_MANAGER
+// DELETE /api/v1/connections → ROLE_ADMIN | ROLE_VPN_MANAGER
+// GET /api/v1/stats → ROLE_ADMIN | ROLE_READ_ONLY
+```
+
+**Files to Create**:
+- `src/api/rbac.c` (NEW - RBAC engine)
+- `src/api/rbac.h` (NEW)
+- `src/api/rbac_config.c` (NEW - config parser)
+- `examples/api-roles.conf` (NEW - example config)
+
+**Files to Modify**:
+- `src/api/api_server.c` (integrate RBAC middleware)
+- `src/api/jwt_auth.c` (add roles to JWT claims)
+
+**Configuration Format**:
+```
+[role "admin"]
+    description = Full administrative access
+    permissions = *
+
+[role "vpn_manager"]
+    description = VPN connection management
+    permissions = GET /api/v1/connections
+    permissions = DELETE /api/v1/connections/*
+    permissions = GET /api/v1/stats
+
+[role "user_manager"]
+    description = User account management
+    permissions = GET /api/v1/users
+    permissions = POST /api/v1/users
+    permissions = DELETE /api/v1/users/*
+
+[role "read_only"]
+    description = Read-only access
+    permissions = GET /api/v1/*
+```
+
+**Testing**:
+- Admin can access all endpoints
+- VPN manager can manage connections but not users
+- User manager can manage users but not connections
+- Read-only can only GET, not POST/DELETE
+- 403 returned for insufficient permissions
+
+**Reference**:
+- NIST RBAC Model
+- OWASP Authorization Cheat Sheet
+
+---
+
+### US-050: Rate Limiting Implementation
+
+**Story**: As a security engineer, I want API rate limiting so that brute-force attacks and DoS attempts are prevented.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 18
+**Story Points**: 8
+**Risk**: LOW
+
+**Description**:
+Implement rate limiting using token bucket algorithm:
+- Per-IP rate limits (100 requests/minute)
+- Per-user rate limits (1000 requests/hour)
+- Endpoint-specific limits (/auth/login stricter)
+- Rate limit headers (X-RateLimit-*)
+
+**Acceptance Criteria**:
+- [ ] Token bucket implementation (src/api/rate_limit.c)
+- [ ] Per-IP rate limiting (100 req/min configurable)
+- [ ] Per-user rate limiting (1000 req/hour configurable)
+- [ ] Per-endpoint rate limiting (/auth/login: 5 req/min)
+- [ ] Rate limit exceeded → 429 Too Many Requests
+- [ ] Response headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+- [ ] Retry-After header on 429 responses
+- [ ] Configuration: api_rate_limit_per_ip = 100
+- [ ] Configuration: api_rate_limit_per_user = 1000
+- [ ] Configuration: api_rate_limit_burst = 10
+- [ ] Whitelist support for trusted IPs
+- [ ] Rate limit metrics exposed (/api/v1/metrics/rate_limits)
+- [ ] Thread-safe implementation (multiple API threads)
+- [ ] Unit tests for token bucket algorithm
+- [ ] Load tests to verify rate limiting works under load
+
+**Dependencies**: US-046 (Basic REST API Implementation)
+
+**Technical Notes**:
+```c
+// Token bucket implementation
+typedef struct {
+    uint64_t tokens;             // Current tokens
+    uint64_t max_tokens;         // Bucket capacity (burst size)
+    uint64_t refill_rate;        // Tokens per second
+    uint64_t last_refill_time;   // Nanoseconds since epoch
+    pthread_mutex_t lock;
+} token_bucket_t;
+
+bool token_bucket_consume(token_bucket_t *bucket, uint64_t tokens) {
+    pthread_mutex_lock(&bucket->lock);
+
+    // Refill tokens based on elapsed time
+    uint64_t now = get_time_ns();
+    uint64_t elapsed_ns = now - bucket->last_refill_time;
+    uint64_t new_tokens = (elapsed_ns * bucket->refill_rate) / 1000000000;
+    bucket->tokens = MIN(bucket->tokens + new_tokens, bucket->max_tokens);
+    bucket->last_refill_time = now;
+
+    // Try to consume
+    if (bucket->tokens >= tokens) {
+        bucket->tokens -= tokens;
+        pthread_mutex_unlock(&bucket->lock);
+        return true;
+    }
+
+    pthread_mutex_unlock(&bucket->lock);
+    return false; // Rate limit exceeded
+}
+```
+
+**Files to Create**:
+- `src/api/rate_limit.c` (NEW - rate limiting)
+- `src/api/rate_limit.h` (NEW)
+
+**Files to Modify**:
+- `src/api/api_server.c` (integrate rate limiting middleware)
+- `src/config.c` (add rate limit config options)
+
+**Testing**:
+- Send 101 requests in 1 minute → 101st gets 429
+- Wait 1 minute → requests succeed again
+- Burst handling: 10 quick requests succeed
+- Per-endpoint limits work
+- Whitelist IPs bypass rate limits
+
+**Reference**:
+- RFC 6585: Additional HTTP Status Codes (429)
+- Token Bucket Algorithm
+- OWASP API Security Top 10 (API4:2023 Unrestricted Resource Consumption)
+
+---
+
+### US-051: Audit Logging System
+
+**Story**: As a compliance officer, I want comprehensive audit logging so that all API access is tracked for security audits.
+
+**Priority**: P1 (HIGH)
+**Sprint**: Sprint 19
+**Story Points**: 5
+**Risk**: LOW
+
+**Description**:
+Implement structured audit logging:
+- Log all API requests/responses
+- Security events (auth success/failure, permission denials)
+- Structured format (JSON)
+- Configurable log destinations (file, syslog, remote)
+
+**Acceptance Criteria**:
+- [ ] Audit log implementation (src/api/audit_log.c)
+- [ ] Log all API requests: timestamp, IP, user, method, endpoint, status
+- [ ] Log authentication events: login success/failure, token refresh, logout
+- [ ] Log authorization failures: user, endpoint, required role, actual role
+- [ ] Log rate limiting events: IP, endpoint, limit exceeded
+- [ ] Structured JSON format for easy parsing
+- [ ] Configurable log level: INFO, WARN, ERROR, SECURITY
+- [ ] Log rotation support (max size, max age)
+- [ ] Syslog integration (RFC 5424)
+- [ ] Remote logging support (HTTP POST to log collector)
+- [ ] Performance: Async logging (non-blocking)
+- [ ] Configuration: api_audit_log_file = /var/log/ocserv/api-audit.log
+- [ ] Configuration: api_audit_log_level = INFO
+- [ ] Sensitive data masking (passwords, tokens)
+- [ ] Integration with existing ocserv logging
+- [ ] Unit tests for log formatting
+- [ ] Integration tests verify logs created
+
+**Dependencies**: US-046, US-047, US-049, US-050
+
+**Technical Notes**:
+```c
+// Audit log entry structure
+typedef struct {
+    char timestamp[32];      // ISO 8601 format
+    char event_type[32];     // "api_request", "auth_success", "auth_failure"
+    char severity[16];       // "INFO", "WARN", "ERROR", "SECURITY"
+    char source_ip[46];      // IPv4/IPv6 address
+    char username[256];      // Authenticated user (or "anonymous")
+    char method[16];         // "GET", "POST", etc.
+    char endpoint[256];      // "/api/v1/users"
+    int status_code;         // 200, 401, 403, 429, etc.
+    uint64_t duration_ms;    // Request duration
+    char user_agent[256];    // Client User-Agent
+    char details[1024];      // Additional context (JSON)
+} audit_log_entry_t;
+
+// Example log entry (JSON)
+{
+    "timestamp": "2025-10-29T15:23:45.123Z",
+    "event_type": "api_request",
+    "severity": "INFO",
+    "source_ip": "192.168.1.100",
+    "username": "admin@example.com",
+    "method": "DELETE",
+    "endpoint": "/api/v1/connections/12345",
+    "status_code": 200,
+    "duration_ms": 42,
+    "user_agent": "curl/7.68.0",
+    "details": {"connection_id": 12345, "reason": "admin_disconnect"}
+}
+```
+
+**Files to Create**:
+- `src/api/audit_log.c` (NEW)
+- `src/api/audit_log.h` (NEW)
+
+**Files to Modify**:
+- `src/api/api_server.c` (log all requests)
+- `src/api/jwt_auth.c` (log auth events)
+- `src/api/rbac.c` (log authorization failures)
+- `src/config.c` (add audit log config)
+
+**Testing**:
+- Log file created and written
+- JSON format valid
+- Sensitive data masked
+- Async logging doesn't block requests
+- Log rotation works
+
+**Reference**:
+- RFC 5424: Syslog Protocol
+- OWASP Logging Cheat Sheet
+- CEF (Common Event Format) for SIEM integration
+
+---
+
+### US-052: WebSocket Real-time Monitoring
+
+**Story**: As a VPN operator, I want real-time connection updates via WebSocket so that I can monitor VPN activity without polling.
+
+**Priority**: P2 (MEDIUM)
+**Sprint**: Sprint 20-21
+**Story Points**: 13
+**Risk**: MEDIUM
+
+**Description**:
+Implement WebSocket support for real-time monitoring:
+- Connection events (connect, disconnect)
+- Log streaming
+- Server statistics updates
+- Bi-directional communication
+
+**Acceptance Criteria**:
+- [ ] libwebsockets integrated and builds correctly
+- [ ] WebSocket endpoint: WS /api/v1/stream/connections
+- [ ] WebSocket endpoint: WS /api/v1/stream/logs
+- [ ] WebSocket endpoint: WS /api/v1/stream/stats
+- [ ] JWT authentication via query parameter or Sec-WebSocket-Protocol
+- [ ] Events pushed to all connected clients: connection_opened, connection_closed, user_authenticated
+- [ ] Log messages streamed in real-time (with filtering by level)
+- [ ] Statistics updates every 5 seconds (configurable)
+- [ ] Ping/pong for connection keepalive
+- [ ] Graceful disconnect handling
+- [ ] Maximum connections limit (100 default)
+- [ ] Message rate limiting (10 msg/sec per client)
+- [ ] JSON message format
+- [ ] Integration tests with WebSocket client
+- [ ] Performance: Handle 50 simultaneous WebSocket connections
+
+**Dependencies**: US-046 (Basic REST API), US-047 (JWT Auth)
+
+**Technical Notes**:
+```c
+// WebSocket message format
+{
+    "event": "connection_opened",
+    "timestamp": "2025-10-29T15:30:00.000Z",
+    "data": {
+        "connection_id": 12345,
+        "username": "john.doe@example.com",
+        "source_ip": "203.0.113.42",
+        "protocol": "DTLS",
+        "cipher": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+    }
+}
+
+// Integration with main event loop
+void notify_websocket_clients(ws_manager_t *mgr, const char *event,
+                               const char *json_data) {
+    ws_client_t *client;
+    FOREACH_CLIENT(mgr, client) {
+        if (client->subscribed_to(event)) {
+            ws_send_text(client, json_data);
+        }
+    }
+}
+```
+
+**Files to Create**:
+- `src/api/websocket_server.c` (NEW)
+- `src/api/websocket_server.h` (NEW)
+- `src/api/ws_events.c` (NEW - event publishing)
+
+**Files to Modify**:
+- `src/api/api_server.c` (integrate libwebsockets)
+- `src/worker-vpn.c` (publish connection events)
+- `src/main-proc.c` (publish server events)
+
+**Testing**:
+- WebSocket connection established
+- Authentication required
+- Events pushed to clients
+- Multiple clients receive same events
+- Disconnected clients handled gracefully
+- Rate limiting prevents message floods
+
+**Reference**:
+- https://libwebsockets.org/
+- RFC 6455: The WebSocket Protocol
+- WebSocket Secure (WSS) over TLS
+
+---
+
+### US-053: WebUI Backend (Go)
+
+**Story**: As a VPN administrator, I want a web-based UI backend so that the REST API is wrapped with a user-friendly interface.
+
+**Priority**: P2 (MEDIUM)
+**Sprint**: Sprint 22-23
+**Story Points**: 21
+**Risk**: MEDIUM
+
+**Description**:
+Implement WebUI backend service in Go:
+- Proxies requests to ocserv REST API
+- Session management (HTTP sessions + JWT)
+- Static file serving (Vue.js frontend)
+- WebSocket proxy for real-time updates
+
+**Acceptance Criteria**:
+- [ ] Go backend service created (cmd/webui/main.go)
+- [ ] Gin web framework integrated
+- [ ] Proxies all /api/* requests to ocserv REST API
+- [ ] Session management (secure HTTP cookies)
+- [ ] Login page: /login → JWT from ocserv → session cookie
+- [ ] Logout: /logout → invalidate session
+- [ ] Static file serving for Vue.js frontend
+- [ ] WebSocket proxy (/ws/stream/* → ocserv WS endpoints)
+- [ ] CORS configuration for development
+- [ ] TLS support (HTTPS)
+- [ ] Configuration file (webui.yaml)
+- [ ] Dockerfile for containerization
+- [ ] Systemd service file
+- [ ] Health check endpoint (/health)
+- [ ] Unit tests for all handlers
+- [ ] Integration tests with ocserv REST API
+
+**Dependencies**: US-046 (REST API), US-052 (WebSocket)
+
+**Technical Notes**:
+```go
+// main.go structure
+package main
+
+import (
+    "github.com/gin-gonic/gin"
+    "github.com/gorilla/sessions"
+)
+
+func main() {
+    r := gin.Default()
+
+    // Session middleware
+    store := sessions.NewCookieStore([]byte("secret-key"))
+    r.Use(SessionMiddleware(store))
+
+    // Authentication
+    r.POST("/login", handleLogin)
+    r.POST("/logout", handleLogout)
+
+    // API proxy (requires authentication)
+    api := r.Group("/api")
+    api.Use(RequireAuth())
+    api.Any("/*path", proxyToOcserv)
+
+    // WebSocket proxy
+    r.GET("/ws/*path", proxyWebSocket)
+
+    // Static files (Vue.js frontend)
+    r.Static("/", "./dist")
+
+    r.Run(":8080")
+}
+```
+
+**Files to Create**:
+- `cmd/webui/main.go` (NEW)
+- `internal/webui/proxy.go` (NEW - API proxy)
+- `internal/webui/auth.go` (NEW - authentication)
+- `internal/webui/session.go` (NEW - session management)
+- `internal/webui/websocket.go` (NEW - WebSocket proxy)
+- `configs/webui.yaml` (NEW - configuration)
+- `deploy/webui/Dockerfile` (NEW)
+- `deploy/webui/webui.service` (NEW - systemd)
+
+**Configuration (webui.yaml)**:
+```yaml
+server:
+  port: 8080
+  tls_enabled: true
+  tls_cert: /etc/ocserv-webui/cert.pem
+  tls_key: /etc/ocserv-webui/key.pem
+
+ocserv_api:
+  base_url: https://localhost:8443
+  timeout: 30s
+  tls_verify: true
+  ca_cert: /etc/ocserv/api-ca.pem
+
+session:
+  secret: "change-this-in-production"
+  max_age: 3600
+  secure: true
+  http_only: true
+
+cors:
+  enabled: true  # For development
+  allowed_origins: ["http://localhost:3000"]
+```
+
+**Testing**:
+- Login flow works
+- API requests proxied correctly
+- WebSocket proxy functional
+- Static files served
+- Sessions persist across requests
+- Logout invalidates session
+
+**Reference**:
+- https://github.com/gin-gonic/gin
+- https://github.com/gorilla/sessions
+- Go best practices
+
+---
+
+### US-054: WebUI Frontend (Vue.js 3)
+
+**Story**: As a VPN administrator, I want a modern web interface so that I can manage users and connections without command-line tools.
+
+**Priority**: P2 (MEDIUM)
+**Sprint**: Sprint 24-26
+**Story Points**: 34
+**Risk**: MEDIUM
+
+**Description**:
+Implement WebUI frontend using Vue.js 3:
+- User management interface
+- Connection monitoring dashboard
+- Real-time updates via WebSocket
+- Statistics and charts
+- Configuration editor
+
+**Acceptance Criteria**:
+- [ ] Vue.js 3 project created (Vite tooling)
+- [ ] TypeScript for type safety
+- [ ] Vue Router for navigation
+- [ ] Pinia for state management
+- [ ] Axios for HTTP requests
+- [ ] Components: Login, Dashboard, UserList, UserCreate, UserEdit, UserDelete
+- [ ] Components: ConnectionList, ConnectionDetails, DisconnectButton
+- [ ] Components: StatsDashboard with charts (Chart.js or ECharts)
+- [ ] Components: ConfigEditor (Monaco editor or CodeMirror)
+- [ ] Real-time connection updates via WebSocket
+- [ ] Real-time log viewer (scrolling log display)
+- [ ] Responsive design (mobile-friendly)
+- [ ] Dark mode support
+- [ ] Error handling and user feedback (toast notifications)
+- [ ] Loading states for async operations
+- [ ] Form validation
+- [ ] Pagination for large lists
+- [ ] Search and filtering
+- [ ] Internationalization support (i18n)
+- [ ] Unit tests (Vitest)
+- [ ] E2E tests (Playwright or Cypress)
+- [ ] Build and deployment scripts
+
+**Dependencies**: US-053 (WebUI Backend)
+
+**Technical Stack**:
+```json
+{
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0",
+    "pinia": "^2.1.0",
+    "axios": "^1.6.0",
+    "chart.js": "^4.4.0",
+    "vue-chartjs": "^5.3.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "typescript": "^5.3.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vitest": "^1.0.0",
+    "playwright": "^1.40.0"
+  }
+}
+```
+
+**Project Structure**:
+```
+frontend/
+├── src/
+│   ├── main.ts
+│   ├── App.vue
+│   ├── router/
+│   │   └── index.ts
+│   ├── stores/
+│   │   ├── auth.ts
+│   │   ├── users.ts
+│   │   └── connections.ts
+│   ├── components/
+│   │   ├── LoginForm.vue
+│   │   ├── Dashboard.vue
+│   │   ├── UserList.vue
+│   │   ├── ConnectionList.vue
+│   │   └── StatsChart.vue
+│   ├── views/
+│   │   ├── Login.vue
+│   │   ├── Home.vue
+│   │   ├── Users.vue
+│   │   └── Connections.vue
+│   └── services/
+│       ├── api.ts
+│       └── websocket.ts
+├── tests/
+│   ├── unit/
+│   └── e2e/
+├── public/
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
+```
+
+**Key Components**:
+```vue
+<!-- Dashboard.vue -->
+<template>
+  <div class="dashboard">
+    <h1>VPN Dashboard</h1>
+    <StatsOverview :stats="stats" />
+    <ConnectionList :connections="connections" :realtime="true" />
+    <RecentLogs :logs="logs" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useConnectionStore } from '@/stores/connections';
+import { WebSocketService } from '@/services/websocket';
+
+const connectionStore = useConnectionStore();
+const connections = ref([]);
+const stats = ref({});
+const logs = ref([]);
+
+let ws: WebSocketService;
+
+onMounted(async () => {
+  await connectionStore.fetchConnections();
+  connections.value = connectionStore.connections;
+
+  // WebSocket for real-time updates
+  ws = new WebSocketService('/ws/stream/connections');
+  ws.on('connection_opened', (data) => {
+    connections.value.push(data);
+  });
+  ws.on('connection_closed', (data) => {
+    const index = connections.value.findIndex(c => c.id === data.connection_id);
+    if (index !== -1) connections.value.splice(index, 1);
+  });
+});
+
+onUnmounted(() => {
+  if (ws) ws.close();
+});
+</script>
+```
+
+**Files to Create**:
+- All frontend files in `frontend/` directory
+- `deploy/webui/nginx.conf` (for production deployment)
+
+**Testing**:
+- Unit tests for all stores and services
+- Component tests for UI components
+- E2E tests for critical user flows (login, create user, disconnect connection)
+- Visual regression tests (optional)
+
+**Reference**:
+- https://vuejs.org/
+- https://router.vuejs.org/
+- https://pinia.vuejs.org/
+- https://vitejs.dev/
+
+---
+
+## Updated Story Summary (Including REST API)
+
+### Total Stories: 54 (was 44)
+
+**By Priority**:
+- **P0 (Critical)**: 7 stories, 62 points
+- **P1 (High)**: 20 stories, 211 points (+64 from REST API stories)
+- **P2 (Medium)**: 9 stories, 110 points (+68 from WebSocket, WebUI)
+- **P3 (Low)**: 4 stories, 16 points
+
+**Total Story Points**: 399 (was 267)
+
+**REST API & WebUI Stories**:
+- US-045: REST API Architecture Design (5 points, P1, Sprint 12)
+- US-046: Basic REST API Implementation (21 points, P1, Sprint 13-14)
+- US-047: JWT Authentication (13 points, P1, Sprint 15)
+- US-048: mTLS Client Certificate Auth (8 points, P1, Sprint 16)
+- US-049: RBAC Authorization (13 points, P1, Sprint 17)
+- US-050: Rate Limiting (8 points, P1, Sprint 18)
+- US-051: Audit Logging (5 points, P1, Sprint 19)
+- US-052: WebSocket Real-time (13 points, P2, Sprint 20-21)
+- US-053: WebUI Backend Go (21 points, P2, Sprint 22-23)
+- US-054: WebUI Frontend Vue.js (34 points, P2, Sprint 24-26)
+
+**Updated Velocity Estimate**:
+- Sprint capacity: 20-30 points
+- Phase 1 (P0+P1): 273 points = ~11-14 sprints (22-28 weeks)
+- Phase 2 (REST API + WebUI P2 stories): 68 points = ~3-4 sprints (6-8 weeks)
+- **Total Project**: 399 points = ~16-20 sprints (32-40 weeks, ~8-10 months)
+
+---
+
+**Document Version**: 1.2
+**Last Updated**: 2025-10-29 (Added REST API and WebUI User Stories for Phase 2)
 **Next Review**: Sprint 0 Retrospective
