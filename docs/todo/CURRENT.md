@@ -565,6 +565,121 @@ Key decisions will be tracked here as the project progresses.
 
 ---
 
+## Research & Future Exploration
+
+### ExpressVPN Lightway Protocol Investigation
+
+**Priority**: MEDIUM (Research)
+**Timeline**: Post v2.0.0 release
+**Status**: ⏸️ Deferred until after core wolfSSL migration
+
+#### Background
+
+ExpressVPN's **Lightway** is a modern VPN protocol built on wolfSSL, designed as a lightweight, fast, and secure alternative to legacy VPN protocols. It uses:
+- **wolfSSL** for cryptographic operations (same as our project!)
+- Modern cryptographic primitives
+- Optimized for mobile and unreliable networks
+- Open source implementation available
+
+#### Resources
+
+- **Core Library**: https://github.com/expressvpn/lightway-core
+- **Rust Implementation**: https://github.com/expressvpn/lightway (reference with docs)
+- **Documentation**: https://github.com/expressvpn/lightway/tree/main/docs
+
+#### Investigation Tasks
+
+- [ ] Review Lightway protocol specification
+  - [ ] Understand protocol design and message flow
+  - [ ] Analyze cryptographic choices and justification
+  - [ ] Compare with OpenConnect/AnyConnect protocol
+
+- [ ] Study lightway-core C implementation
+  - [ ] Review wolfSSL integration patterns
+  - [ ] Analyze error handling approaches
+  - [ ] Study session management and resumption
+  - [ ] Evaluate thread safety model
+
+- [ ] Study Rust implementation and documentation
+  - [ ] Read design documentation
+  - [ ] Understand architectural decisions
+  - [ ] Extract best practices applicable to ocserv-modern
+
+- [ ] Evaluate integration opportunities
+  - [ ] Could ocserv-modern support Lightway as alternative protocol?
+  - [ ] Are there wolfSSL usage patterns we should adopt?
+  - [ ] Can we reuse any abstraction layers?
+  - [ ] Compatibility considerations with Cisco ecosystem
+
+#### Key Questions to Answer
+
+1. **Performance**: How does Lightway compare to OpenConnect protocol?
+2. **Security**: What security advantages does Lightway offer?
+3. **Compatibility**: Could Lightway coexist with AnyConnect protocol support?
+4. **Code Reuse**: Can we reuse any Lightway components or patterns?
+5. **wolfSSL Usage**: What can we learn from their wolfSSL integration?
+6. **Mobile Optimization**: What mobile-specific optimizations does Lightway use?
+
+#### Potential Outcomes
+
+**Option A: Learn Best Practices**
+- Adopt wolfSSL integration patterns
+- Use similar error handling approaches
+- Apply mobile optimization techniques
+- Maintain AnyConnect protocol compatibility
+
+**Option B: Dual Protocol Support**
+- Add Lightway as optional alternative protocol
+- Clients can choose OpenConnect or Lightway
+- Requires significant additional development
+- Market positioning: "Best of both worlds"
+
+**Option C: Lightway-Inspired Enhancements**
+- Enhance OpenConnect protocol with Lightway ideas
+- Maintain backward compatibility
+- Selective feature adoption
+
+#### Dependencies
+
+**Blocked By**:
+- v2.0.0 release (wolfSSL migration must be complete and stable)
+- Performance validation of wolfSSL migration
+- Team capacity post-launch
+
+**Prerequisites**:
+- Completed wolfSSL integration experience
+- Stable production deployment
+- Community feedback on v2.0.0
+
+#### Estimated Effort
+
+**Research Phase**: 2-3 weeks
+- Protocol analysis: 1 week
+- Code review: 1 week
+- Feasibility assessment: 1 week
+
+**If Pursuing Integration**:
+- Lightweight (pattern adoption): 2-4 weeks
+- Medium (inspired enhancements): 8-12 weeks
+- Full (dual protocol): 16-24 weeks
+
+#### Decision Date
+
+**No Earlier Than**: Q4 2026 (post v2.0.0 release)
+**Review Trigger**: After v2.0.0 has been in production for 3+ months
+
+#### Notes
+
+- Lightway is GPLv2 licensed (same as wolfSSL 5.7.x and earlier)
+  - **IMPORTANT**: Check Lightway's wolfSSL version requirements
+  - May use older wolfSSL version with GPLv2 (not v5.8.2 with GPLv3)
+- ExpressVPN actively maintains the project
+- Growing community adoption
+- Designed by security experts with VPN domain expertise
+- Could provide valuable insights even if we don't adopt the protocol
+
+---
+
 ## Contact
 
 **Project Lead**: TBD

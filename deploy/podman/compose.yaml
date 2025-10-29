@@ -1,0 +1,271 @@
+# Podman Compose configuration for ocserv-modern
+# Production-grade multi-environment container setup
+#
+# Usage:
+#   podman-compose up dev        # Start development environment
+#   podman-compose up test       # Start test environment
+#   podman-compose up build      # Run build
+#   podman-compose up ci         # Run CI pipeline
+#
+# IMPORTANT: This uses Podman Compose (not docker-compose)
+# All containers support rootless mode with SELinux
+
+version: "3.8"
+
+# Named volumes for persistent data
+volumes:
+  dev-home:
+    driver: local
+  build-cache:
+    driver: local
+  test-results:
+    driver: local
+  ci-reports:
+    driver: local
+
+# Internal network for inter-container communication
+networks:
+  ocserv-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+services:
+  # Development Environment
+  # Full development toolchain with debug symbols and hot-reload
+  dev:
+    image: localhost/ocserv-modern-dev:latest
+    container_name: ocserv-dev
+    hostname: ocserv-dev
+
+    # Rootless user configuration
+    user: "1000:1000"
+
+    # Security options for SELinux and capabilities
+    security_opt:
+      - label=type:container_runtime_t
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN        # Required for TUN/TAP device testing
+      - NET_RAW          # Required for raw socket operations
+      - SYS_PTRACE       # Required for debugging with gdb
+
+    # Volume mounts
+    # :Z enables SELinux relabeling for rootless containers
+    volumes:
+      - ../../:/workspace:Z                    # Source code (two dirs up from deploy/podman)
+      - dev-home:/home/developer:Z             # Persistent home directory
+      - build-cache:/workspace/build:Z         # Build cache
+
+    # Working directory
+    working_dir: /workspace
+
+    # Environment variables
+    environment:
+      - TERM=xterm-256color
+      - EDITOR=vim
+      - WORKSPACE=/workspace
+
+    # Networks
+    networks:
+      - ocserv-net
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Default command (interactive bash)
+    command: /bin/bash
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+    # Restart policy
+    restart: "no"
+
+  # Test Environment
+  # Runtime testing with test frameworks and coverage tools
+  test:
+    image: localhost/ocserv-modern-test:latest
+    container_name: ocserv-test
+    hostname: ocserv-test
+
+    user: "1000:1000"
+
+    security_opt:
+      - label=type:container_runtime_t
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    volumes:
+      - ../../:/workspace:Z
+      - test-results:/workspace/test-results:Z
+      - build-cache:/workspace/build:Z
+
+    working_dir: /workspace
+
+    environment:
+      - TERM=xterm-256color
+      - WORKSPACE=/workspace
+      - TEST_RESULTS=/workspace/test-results
+      - COVERAGE_REPORTS=/workspace/coverage-reports
+
+    networks:
+      - ocserv-net
+
+    # Default command runs tests
+    command: /usr/local/bin/run-tests
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+    restart: "no"
+
+    # Depends on dev environment for libraries
+    depends_on:
+      - dev
+
+  # Build Environment
+  # Release-optimized builds for production artifacts
+  build:
+    image: localhost/ocserv-modern-build:latest
+    container_name: ocserv-build
+    hostname: ocserv-build
+
+    user: "1000:1000"
+
+    security_opt:
+      - label=type:container_runtime_t
+    cap_drop:
+      - ALL
+
+    volumes:
+      - ../../:/workspace:Z
+      - ./artifacts:/artifacts:Z              # Build artifacts output
+      - build-cache:/workspace/build:Z
+
+    working_dir: /workspace
+
+    environment:
+      - WORKSPACE=/workspace
+      - ARTIFACTS=/artifacts
+
+    networks:
+      - ocserv-net
+
+    # Default command builds release
+    command: /usr/local/bin/build-release
+
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G
+        reservations:
+          cpus: '4.0'
+          memory: 8G
+
+    restart: "no"
+
+  # CI/CD Environment
+  # Lightweight container for automated testing in pipelines
+  ci:
+    image: localhost/ocserv-modern-ci:latest
+    container_name: ocserv-ci
+    hostname: ocserv-ci
+
+    user: "1000:1000"
+
+    security_opt:
+      - label=type:container_runtime_t
+    cap_drop:
+      - ALL
+
+    volumes:
+      - ../../:/workspace:Z
+      - ci-reports:/workspace/ci-reports:Z
+      - build-cache:/workspace/build:Z
+
+    working_dir: /workspace
+
+    environment:
+      - WORKSPACE=/workspace
+      - CI_REPORTS=/workspace/ci-reports
+      - CI=true
+
+    networks:
+      - ocserv-net
+
+    # Default command runs CI pipeline
+    command: /usr/local/bin/ci-runner
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+    restart: "no"
+
+  # Helper service: Documentation builder (optional)
+  docs:
+    image: localhost/ocserv-modern-dev:latest
+    container_name: ocserv-docs
+    hostname: ocserv-docs
+
+    user: "1000:1000"
+
+    security_opt:
+      - label=type:container_runtime_t
+    cap_drop:
+      - ALL
+
+    volumes:
+      - ../../:/workspace:Z
+      - ./docs-output:/docs-output:Z
+
+    working_dir: /workspace
+
+    environment:
+      - WORKSPACE=/workspace
+
+    networks:
+      - ocserv-net
+
+    # Build documentation with Doxygen
+    command: >
+      bash -c "
+        if [ -f Doxyfile ]; then
+          doxygen Doxyfile &&
+          cp -r docs/html/* /docs-output/
+        else
+          echo 'ERROR: Doxyfile not found'
+          exit 1
+        fi
+      "
+
+    restart: "no"
+
+    depends_on:
+      - dev

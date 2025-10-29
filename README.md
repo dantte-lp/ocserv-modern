@@ -118,9 +118,11 @@ ocserv-modern/
 ### Prerequisites
 
 - **Operating System**: Linux (Ubuntu 22.04+, Fedora 39+, RHEL 9+), FreeBSD 13+, OpenBSD 7+
-- **Compiler**: GCC 9+ or Clang 11+
-- **Build Tools**: Meson 0.63+, Ninja, CMake
-- **Container Runtime**: Podman or Docker (for development)
+- **Compiler**: GCC 14+ or Clang 18+ (with C23 support)
+  - **C Standard**: ISO/IEC 9899:2024 (C23) - **MANDATORY**
+  - Required flags: `-std=c23` (or `-std=c2x` for older compilers)
+- **Build Tools**: Meson 1.0+, Ninja, CMake 3.25+
+- **Container Runtime**: Podman 4.0+ (recommended) or Docker 20+ (for development)
 
 ### Development Environment (Recommended)
 
