@@ -30,9 +30,9 @@
 #include <string.h>
 #include <assert.h>
 
-// C23 standard check
-#if __STDC_VERSION__ < 202311L
-#error "This code requires C23 standard (ISO/IEC 9899:2024)"
+// C23 standard check (accept C2x/C20 from GCC 14 as it provides C23 features)
+#if __STDC_VERSION__ < 202000L
+#error "This code requires C23 standard (ISO/IEC 9899:2024) or C2x support (GCC 14+)"
 #endif
 
 /* Test counter */
@@ -137,7 +137,7 @@ TEST(library_double_init) {
 }
 
 TEST(context_creation_server) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, false);
     ASSERT_NOT_NULL(ctx);
@@ -149,7 +149,7 @@ TEST(context_creation_server) {
 }
 
 TEST(context_creation_client) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(false, false);
     ASSERT_NOT_NULL(ctx);
@@ -161,7 +161,7 @@ TEST(context_creation_client) {
 }
 
 TEST(context_creation_dtls_server) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, true);
     ASSERT_NOT_NULL(ctx);
@@ -173,7 +173,7 @@ TEST(context_creation_dtls_server) {
 }
 
 TEST(context_creation_dtls_client) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(false, true);
     ASSERT_NOT_NULL(ctx);
@@ -185,7 +185,7 @@ TEST(context_creation_dtls_client) {
 }
 
 TEST(session_creation) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, false);
     ASSERT_NOT_NULL(ctx);
@@ -201,7 +201,7 @@ TEST(session_creation) {
 }
 
 TEST(session_set_get_ptr) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, false);
     tls_session_t *session = tls_session_new(ctx);
@@ -239,7 +239,7 @@ TEST(priority_translation_performance) {
 }
 
 TEST(context_set_priority) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, false);
     ASSERT_NOT_NULL(ctx);
@@ -255,7 +255,7 @@ TEST(context_set_priority) {
 }
 
 TEST(context_set_verify) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, false);
     ASSERT_NOT_NULL(ctx);
@@ -273,7 +273,7 @@ TEST(context_set_verify) {
 }
 
 TEST(context_set_session_timeout) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, false);
     ASSERT_NOT_NULL(ctx);
@@ -287,7 +287,7 @@ TEST(context_set_session_timeout) {
 }
 
 TEST(dtls_set_get_mtu) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     tls_context_t *ctx = tls_context_new(true, true);
     tls_session_t *session = tls_session_new(ctx);
@@ -344,7 +344,7 @@ TEST(error_is_fatal) {
 }
 
 TEST(hash_fast_sha256) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     const char *data = "Hello, World!";
     uint8_t hash[32];
@@ -366,7 +366,7 @@ TEST(hash_fast_sha256) {
 }
 
 TEST(random_generation) {
-    tls_wolfssl_init();
+    (void)tls_wolfssl_init();
 
     uint8_t buf1[32];
     uint8_t buf2[32];

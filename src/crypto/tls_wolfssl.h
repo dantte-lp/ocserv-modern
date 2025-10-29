@@ -52,9 +52,9 @@
 #include <wolfssl/error-ssl.h>
 #include <stdatomic.h>
 
-// C23 standard compliance
-#if __STDC_VERSION__ < 202311L
-#error "This code requires C23 standard (ISO/IEC 9899:2024)"
+// C23 standard compliance (accept C2x/C20 from GCC 14 as it provides C23 features)
+#if __STDC_VERSION__ < 202000L
+#error "This code requires C23 standard (ISO/IEC 9899:2024) or C2x support (GCC 14+)"
 #endif
 
 /* ============================================================================
@@ -223,70 +223,9 @@ void tls_wolfssl_deinit(void);
  * ============================================================================ */
 
 /**
- * Custom I/O send callback for wolfSSL
- *
- * This function wraps the user's push_func callback and provides it to wolfSSL.
- *
- * @param ssl wolfSSL session
- * @param buf Data buffer
- * @param sz Data size
- * @param ctx User context
- * @return Bytes sent on success, negative on error
+ * Note: Internal callback functions (wolfssl_io_send, wolfssl_io_recv,
+ * wolfssl_psk_server_cb, wolfssl_psk_client_cb, wolfssl_verify_cb, etc.)
+ * are defined as static in the implementation file and not exposed in this header.
  */
-static int wolfssl_io_send(WOLFSSL* ssl, char* buf, int sz, void* ctx);
-
-/**
- * Custom I/O receive callback for wolfSSL
- *
- * This function wraps the user's pull_func callback and provides it to wolfSSL.
- *
- * @param ssl wolfSSL session
- * @param buf Data buffer
- * @param sz Buffer size
- * @param ctx User context
- * @return Bytes received on success, negative on error
- */
-static int wolfssl_io_recv(WOLFSSL* ssl, char* buf, int sz, void* ctx);
-
-/**
- * PSK server callback wrapper for wolfSSL
- *
- * @param ssl wolfSSL session
- * @param identity PSK identity
- * @param key Output key buffer
- * @param max_key_len Maximum key length
- * @return Key length on success, 0 on failure
- */
-static unsigned int wolfssl_psk_server_cb(WOLFSSL* ssl,
-                                          const char* identity,
-                                          unsigned char* key,
-                                          unsigned int max_key_len);
-
-/**
- * PSK client callback wrapper for wolfSSL
- *
- * @param ssl wolfSSL session
- * @param hint PSK hint from server
- * @param identity Output identity buffer
- * @param max_identity_len Maximum identity length
- * @param key Output key buffer
- * @param max_key_len Maximum key length
- * @return Key length on success, 0 on failure
- */
-static unsigned int wolfssl_psk_client_cb(WOLFSSL* ssl,
-                                          const char* hint,
-                                          char* identity,
-                                          unsigned int max_identity_len,
-                                          unsigned char* key,
-                                          unsigned int max_key_len);
-
-/**
- * Certificate verification callback wrapper for wolfSSL
- *
- * @param preverify Pre-verification result (1 = OK, 0 = failed)
- * @param x509_ctx Certificate verification context
- * @return 1 to continue verification, 0 to fail
- */
-static int wolfssl_verify_cb(int preverify, WOLFSSL_X509_STORE_CTX* x509_ctx);
 
 #endif // OCSERV_TLS_WOLFSSL_H

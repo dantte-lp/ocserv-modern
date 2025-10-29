@@ -45,9 +45,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-// C23 standard compliance
-#if __STDC_VERSION__ < 202311L
-#error "This code requires C23 standard (ISO/IEC 9899:2024)"
+// C23 standard compliance (accept C2x/C20 from GCC 14 as it provides C23 features)
+#if __STDC_VERSION__ < 202000L
+#error "This code requires C23 standard (ISO/IEC 9899:2024) or C2x support (GCC 14+)"
 #endif
 
 // Use C23 nullptr instead of NULL

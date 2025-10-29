@@ -13,6 +13,10 @@
  *          and compare GnuTLS vs wolfSSL performance.
  */
 
+// For usleep on newer POSIX systems
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -234,7 +238,7 @@ static void handle_client(tls_context_t *ctx, int client_fd,
     g_stats.connections_active--;
 
     // Graceful shutdown
-    tls_bye(session);
+    (void)tls_bye(session);
     close(client_fd);
 
     // session will be automatically freed by cleanup attribute

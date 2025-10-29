@@ -96,7 +96,7 @@ ifeq ($(BACKEND),gnutls)
 else
 	@echo "Running wolfSSL unit tests..."
 	@$(MAKE) -s tests/unit/test_tls_wolfssl BACKEND=wolfssl
-	@./tests/unit/test_tls_wolfssl
+	@LD_LIBRARY_PATH=/usr/local/lib:$$LD_LIBRARY_PATH ./tests/unit/test_tls_wolfssl
 endif
 
 # Run unit tests for both backends
