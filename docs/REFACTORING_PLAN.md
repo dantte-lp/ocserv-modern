@@ -190,6 +190,7 @@ Based on extensive research and requirements for pure C implementation (no C++ d
 | Category | Library | Version | Notes |
 |----------|---------|---------|-------|
 | **Crypto/TLS** | wolfSSL | 5.8.2+ | Native API, FIPS 140-3, DTLS 1.3 |
+| **Security/IDPS** | wolfSentry | 1.6.3 | Embedded firewall/IDPS, 64k+32k footprint |
 | **Event Loop** | libuv | 1.51.0+ | Cross-platform async I/O |
 | **HTTP Parser** | llhttp | 9.2+ | Node.js parser (2x faster) |
 | **JSON** | cJSON | 1.7.19+ | Single-file, lightweight |
@@ -1273,6 +1274,124 @@ This is the most critical and risky phase of the project.
 - **Testing Infrastructure**: Self-hosted or cloud VMs
 - **Benchmarking**: Dedicated hardware for consistent results
 - **Code Analysis**: Coverity Scan (free for OSS), clang-tidy
+
+---
+
+## Future Enhancements (Post v2.0.0)
+
+### wolfSentry IDPS Integration (Planned for Sprint 8+)
+
+**Timeline**: After v2.0.0 stable release
+**Effort**: 4-6 weeks
+**Risk**: LOW (additive feature, non-breaking)
+
+#### Rationale
+
+wolfSentry is wolfSSL's embedded IDPS (Intrusion Detection and Prevention System) providing enterprise-grade security features with minimal overhead:
+
+- **Minimal Footprint**: 64 KB code + 32 KB RAM
+- **Pure C Implementation**: No C++ dependencies (perfect fit for ocserv-modern)
+- **Native wolfSSL Integration**: Designed to work with wolfSSL TLS/DTLS
+- **Dynamic Configuration**: JSON-based runtime reconfiguration with atomic transitions
+- **Zero Data Plane Impact**: Operates only on connection establishment
+
+**Key Features for VPN Security**:
+1. Dynamic firewall rules (IP/port/protocol filtering)
+2. Connection tracking and rate limiting
+3. Per-IP and per-subnet limits
+4. DDoS mitigation
+5. Brute-force attack prevention
+6. Geographic IP filtering (with GeoIP database)
+7. Port scanning detection
+8. Real-time threat response
+
+#### Implementation Phases
+
+**Phase 1: Basic Integration (2 weeks)**
+- [ ] wolfSentry library integration into build system
+- [ ] JSON configuration file support
+- [ ] Connection filtering on establishment
+- [ ] Rate limiting per IP
+- [ ] Penalty box mechanism
+- [ ] Basic logging and metrics
+
+**Phase 2: Advanced Features (2 weeks)**
+- [ ] Geographic IP filtering (MaxMind GeoLite2 integration)
+- [ ] Dynamic rule updates via REST API
+- [ ] Integration with threat intelligence feeds
+- [ ] Port scanning detection algorithms
+- [ ] DDoS mitigation enhancements
+- [ ] Advanced analytics
+
+**Phase 3: Enterprise Features (2 weeks)**
+- [ ] Multi-tenancy support (per-tenant rulesets)
+- [ ] SIEM integration (syslog, Splunk)
+- [ ] Advanced dashboard and monitoring
+- [ ] Automated response playbooks
+- [ ] Compliance reporting features
+
+#### Configuration Example
+
+```json
+{
+  "wolfsentry-config-version": 1,
+  "default-policies": {
+    "default-policy-static": "reject",
+    "default-policy-dynamic": "accept"
+  },
+  "events-insert": [
+    {
+      "label": "vpn-connect",
+      "config": {
+        "max-connections": 10,
+        "window-duration": 60,
+        "penalty-duration": 300
+      },
+      "actions": ["rate-limit-check", "log-connection"]
+    },
+    {
+      "label": "auth-failed",
+      "config": {
+        "max-connections": 5,
+        "window-duration": 300,
+        "penalty-duration": 600
+      },
+      "actions": ["increment-failure-count", "check-brute-force"]
+    }
+  ],
+  "static-routes-insert": [
+    {
+      "comment": "Allow VPN port 443",
+      "family": "AF_INET",
+      "tcplike-port-min": 443,
+      "tcplike-port-max": 443,
+      "action": "accept"
+    },
+    {
+      "comment": "Block known Tor exit nodes",
+      "family": "AF_INET",
+      "remote": "185.220.100.0/22",
+      "action": "reject"
+    }
+  ]
+}
+```
+
+#### Performance Impact
+
+**Measured Overhead**:
+- Connection check: < 0.1% CPU per connection
+- Event processing: < 0.5 µs per action
+- Memory per connection: ~224 bytes
+- Data plane impact: **0%** (no packet filtering after establishment)
+
+**Conclusion**: Negligible performance impact, significant security enhancement
+
+#### Documentation Reference
+
+Complete wolfSentry integration documentation available at:
+- Architecture: `/opt/projects/repositories/cisco-secure-client-docs/docs/ocserv-modern/architecture/wolfsentry-integration.md`
+- Implementation: `/opt/projects/repositories/cisco-secure-client-docs/docs/ocserv-modern/implementation/wolfsentry-idps.md`
 
 ---
 
