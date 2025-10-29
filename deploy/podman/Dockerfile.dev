@@ -53,7 +53,6 @@ RUN dnf install -y \
 # Install code quality and documentation tools
 RUN dnf install -y \
     clang-tools-extra \
-    cppcheck \
     graphviz \
     python3 \
     python3-pip \
@@ -61,6 +60,18 @@ RUN dnf install -y \
     ruby-devel \
     rubygems \
     && dnf clean all
+
+# Build and install cppcheck from source (not available in OL10 repos)
+RUN cd /tmp && \
+    git clone --depth 1 --branch 2.16.3 https://github.com/danmar/cppcheck.git && \
+    cd cppcheck && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    cd /tmp && rm -rf cppcheck
 
 # Install Ruby gems for Ceedling
 RUN gem install --no-document \
@@ -125,6 +136,8 @@ RUN cd /opt && \
     ln -s /opt/vcpkg/vcpkg /usr/local/bin/vcpkg
 
 # Build and install wolfSSL from source (GPLv3!)
+# NOTE: --disable-sp-asm due to GCC 14 register syntax incompatibility
+# This trades ~5-10% performance for compatibility with modern GCC
 RUN cd /tmp && \
     wget https://github.com/wolfSSL/wolfssl/archive/refs/tags/v${WOLFSSL_VERSION}-stable.tar.gz && \
     tar xzf v${WOLFSSL_VERSION}-stable.tar.gz && \
@@ -146,6 +159,7 @@ RUN cd /tmp && \
         --disable-oldtls \
         --enable-harden \
         --enable-sp \
+        --disable-sp-asm \
         --enable-opensslextra \
         --enable-opensslall \
         --enable-curve25519 \

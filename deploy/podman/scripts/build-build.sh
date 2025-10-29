@@ -153,7 +153,7 @@ buildah run "$container" -- bash -c "
         --disable-oldtls \
         --enable-harden \
         --enable-sp \
-        --enable-sp-asm \
+        --disable-sp-asm \
         --enable-opensslextra \
         --enable-opensslall \
         --enable-curve25519 \

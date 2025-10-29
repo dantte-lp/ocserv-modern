@@ -185,7 +185,7 @@ buildah run "$container" -- bash -c "
         --disable-oldtls \
         --enable-harden \
         --enable-sp \
-        --enable-sp-asm \
+        --disable-sp-asm \
         --enable-opensslextra \
         --enable-opensslall \
         --enable-curve25519 \
@@ -205,40 +205,40 @@ buildah run "$container" -- bash -c "
     cd /tmp/build
     rm -rf wolfssl-${WOLFSSL_VERSION#v} wolfssl.tar.gz
 "
-
-# Build and install wolfSentry v1.6.3
-log_info "Building wolfSentry ${WOLFSENTRY_VERSION} from source..."
-buildah run "$container" -- bash -c "
-    set -euo pipefail
-    cd /tmp/build
-    curl -LsSf -o wolfsentry.tar.gz https://github.com/wolfSSL/wolfsentry/archive/refs/tags/${WOLFSENTRY_VERSION}.tar.gz
-    tar xzf wolfsentry.tar.gz
-    cd wolfsentry-${WOLFSENTRY_VERSION#v}
-    make -j\$(nproc) \
-        EXTRA_CFLAGS='-std=c23 -g -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2' \
-        EXTRA_LDFLAGS='-Wl,-z,relro -Wl,-z,now'
-    make install
-    ldconfig
-    cd /tmp/build
-    rm -rf wolfsentry-${WOLFSENTRY_VERSION#v} wolfsentry.tar.gz
-"
-
-# Build and install wolfCLU v0.1.8
-log_info "Building wolfCLU ${WOLFCLU_VERSION} from source..."
-buildah run "$container" -- bash -c "
-    set -euo pipefail
-    cd /tmp/build
-    curl -LsSf -o wolfclu.tar.gz https://github.com/wolfSSL/wolfCLU/archive/refs/tags/${WOLFCLU_VERSION}.tar.gz
-    tar xzf wolfclu.tar.gz
-    cd wolfCLU-${WOLFCLU_VERSION#v}
-    ./autogen.sh
-    ./configure --prefix=/usr/local
-    make -j\$(nproc)
-    make install
-    ldconfig
-    cd /tmp/build
-    rm -rf wolfCLU-${WOLFCLU_VERSION#v} wolfclu.tar.gz
-"
+#
+## Build and install wolfSentry v1.6.3
+#log_info "Building wolfSentry ${WOLFSENTRY_VERSION} from source..."
+#buildah run "$container" -- bash -c "
+#    set -euo pipefail
+#    cd /tmp/build
+#    curl -LsSf -o wolfsentry.tar.gz https://github.com/wolfSSL/wolfsentry/archive/refs/tags/${WOLFSENTRY_VERSION}.tar.gz
+#    tar xzf wolfsentry.tar.gz
+#    cd wolfsentry-${WOLFSENTRY_VERSION#v}
+#    make -j\$(nproc) \
+#        EXTRA_CFLAGS='-std=c23 -g -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2' \
+#        EXTRA_LDFLAGS='-Wl,-z,relro -Wl,-z,now'
+#    make install
+#    ldconfig
+#    cd /tmp/build
+#    rm -rf wolfsentry-${WOLFSENTRY_VERSION#v} wolfsentry.tar.gz
+#"
+#
+## Build and install wolfCLU v0.1.8
+#log_info "Building wolfCLU ${WOLFCLU_VERSION} from source..."
+#buildah run "$container" -- bash -c "
+#    set -euo pipefail
+#    cd /tmp/build
+#    curl -LsSf -o wolfclu.tar.gz https://github.com/wolfSSL/wolfCLU/archive/refs/tags/${WOLFCLU_VERSION}.tar.gz
+#    tar xzf wolfclu.tar.gz
+#    cd wolfCLU-${WOLFCLU_VERSION#v}
+#    ./autogen.sh
+#    ./configure --prefix=/usr/local
+#    make -j\$(nproc)
+#    make install
+#    ldconfig
+#    cd /tmp/build
+#    rm -rf wolfCLU-${WOLFCLU_VERSION#v} wolfclu.tar.gz
+#"
 
 # Build and install libuv v1.51.0
 log_info "Building libuv ${LIBUV_VERSION} from source..."
@@ -262,28 +262,28 @@ buildah run "$container" -- bash -c "
     rm -rf libuv-${LIBUV_VERSION#v} libuv.tar.gz
 "
 
-# Build and install llhttp v9.3.0
-log_info "Building llhttp ${LLHTTP_VERSION} from source..."
-buildah run "$container" -- bash -c "
-    set -euo pipefail
-    cd /tmp/build
-    curl -LsSf -o llhttp.tar.gz https://github.com/nodejs/llhttp/archive/refs/tags/release/${LLHTTP_VERSION}.tar.gz
-    tar xzf llhttp.tar.gz
-    cd llhttp-release-${LLHTTP_VERSION#v}
-    mkdir build && cd build
-    cmake .. \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_INSTALL_PREFIX=/usr/local \
-        -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_STATIC_LIBS=ON \
-        -DCMAKE_C_FLAGS='-g -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2' \
-        -DCMAKE_EXE_LINKER_FLAGS='-Wl,-z,relro -Wl,-z,now'
-    make -j\$(nproc)
-    make install
-    ldconfig
-    cd /tmp/build
-    rm -rf llhttp-release-${LLHTTP_VERSION#v} llhttp.tar.gz
-"
+## Build and install llhttp v9.3.0
+#log_info "Building llhttp ${LLHTTP_VERSION} from source..."
+#buildah run "$container" -- bash -c "
+#    set -euo pipefail
+#    cd /tmp/build
+#    curl -LsSf -o llhttp.tar.gz https://github.com/nodejs/llhttp/archive/refs/tags/release/${LLHTTP_VERSION}.tar.gz
+#    tar xzf llhttp.tar.gz
+#    cd llhttp-release-${LLHTTP_VERSION}
+#    mkdir build && cd build
+#    cmake .. \
+#        -DCMAKE_BUILD_TYPE=Debug \
+#        -DCMAKE_INSTALL_PREFIX=/usr/local \
+#        -DBUILD_SHARED_LIBS=ON \
+#        -DBUILD_STATIC_LIBS=ON \
+#        -DCMAKE_C_FLAGS='-g -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2' \
+#        -DCMAKE_EXE_LINKER_FLAGS='-Wl,-z,relro -Wl,-z,now'
+#    make -j\$(nproc)
+#    make install
+#    ldconfig
+#    cd /tmp/build
+#    rm -rf llhttp-release-${LLHTTP_VERSION} llhttp.tar.gz
+#"
 
 # Build and install cJSON v1.7.18 (not v1.7.19 due to potential issues)
 log_info "Building cJSON ${CJSON_VERSION} from source..."

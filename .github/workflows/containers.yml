@@ -23,7 +23,7 @@ env:
 jobs:
   verify-setup:
     name: Verify Podman Setup
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,6 +35,7 @@ jobs:
           skopeo --version
           echo "Runner: $RUNNER_NAME"
           echo "System: $(uname -a)"
+          gcc --version
 
       - name: Verify rootless support
         run: |
@@ -43,7 +44,7 @@ jobs:
 
   build-dev:
     name: Build Development Image
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: verify-setup
     steps:
       - name: Checkout code
@@ -85,7 +86,7 @@ jobs:
 
   build-test:
     name: Build Test Image
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: build-dev
     steps:
       - name: Checkout code
@@ -121,7 +122,7 @@ jobs:
 
   build-build:
     name: Build Build Image
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: verify-setup
     steps:
       - name: Checkout code
@@ -153,7 +154,7 @@ jobs:
 
   build-ci:
     name: Build CI Image
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: build-build
     steps:
       - name: Checkout code
@@ -189,7 +190,7 @@ jobs:
 
   test-backends:
     name: Test TLS Backends
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: build-dev
     strategy:
       matrix:
@@ -228,7 +229,7 @@ jobs:
 
   quick-validate:
     name: Quick Validation
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: build-ci
     steps:
       - name: Checkout code
@@ -254,7 +255,7 @@ jobs:
 
   run-tests:
     name: Run Tests
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: build-test
     steps:
       - name: Checkout code
@@ -298,7 +299,7 @@ jobs:
 
   cleanup:
     name: Cleanup Build Artifacts
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: [test-backends, run-tests, quick-validate]
     if: always()
     steps:
@@ -314,7 +315,7 @@ jobs:
 
   push-images:
     name: Push Images to Registry
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: [build-dev, build-test, build-build, build-ci, run-tests]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     permissions:
@@ -364,7 +365,7 @@ jobs:
 
   security-scan:
     name: Security Scan
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, oracle-linux]
     needs: build-dev
     steps:
       - name: Checkout code
