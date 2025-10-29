@@ -1,0 +1,204 @@
+# Build directories
+build/
+builddir/
+.builddir/
+_build/
+cmake-build-*/
+
+# Build artifacts
+*.o
+*.lo
+*.la
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+
+# Meson
+meson-logs/
+meson-private/
+*.wrap
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Autotools
+.deps/
+.libs/
+*.in~
+/config.h
+/config.log
+/config.status
+/configure
+/stamp-h1
+autom4te.cache/
+/libtool
+
+# Compilation database
+compile_commands.json
+
+# Testing
+test-driver
+*.trs
+*.log
+*.sum
+.test
+
+# Coverage
+*.gcno
+*.gcda
+*.gcov
+coverage/
+htmlcov/
+
+# Debugging
+core
+core.*
+vgcore.*
+*.dSYM/
+.gdb_history
+
+# Profiling
+*.prof
+*.perf
+*.data
+perf.data*
+flamegraph.svg
+*.callgrind
+
+# Static analysis
+cppcheck-build/
+scan-build-*/
+.coverity/
+.sonar/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+*.bak
+.project
+.cproject
+.settings/
+.vs/
+.vscode-test/
+*.code-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python (if used for scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.tox/
+venv/
+.env
+
+# Rust (if any helper tools)
+target/
+Cargo.lock
+
+# Temporary files
+*.tmp
+*.temp
+*.pid
+*.sock
+
+# Certificates and keys (NEVER commit secrets)
+*.pem
+*.key
+*.crt
+*.csr
+*.cert
+*.p12
+*.pfx
+!tests/certs/*.pem
+!tests/certs/*.key
+
+# Configuration (may contain secrets)
+*.conf
+*.cfg
+!tests/*.conf
+!docs/examples/*.conf
+
+# Logs
+*.log
+logs/
+
+# Documentation build
+docs/_build/
+docs/.buildinfo
+site/
+
+# Packages
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.zip
+*.rpm
+*.deb
+
+# Docker/Podman
+.dockerignore
+docker-compose.override.yml
+
+# Backup files
+*.backup
+*.orig
+*.rej
+
+# Local development
+.local/
+.cache/
+local.mk
+.envrc
+
+# Security scan results
+bandit-output.json
+safety-report.json
+
+# Dependencies
+vendor/
+third_party/
+
+# Benchmark results
+bench-results/
+benchmarks/*.csv
+benchmarks/*.json
+
+# Fuzzing
+fuzz-results/
+crashes/
+corpus/
+
+# Release artifacts
+release/
+dist/
+packages/
+
+# Man pages (generated)
+*.1
+*.8
+!docs/*.1
+!docs/*.8

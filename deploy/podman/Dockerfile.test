@@ -1,0 +1,36 @@
+FROM oraclelinux:9
+
+LABEL maintainer="ocserv-modern development team"
+LABEL description="Testing environment for ocserv-modern"
+
+# Install test dependencies
+RUN dnf install -y \
+    gcc \
+    make \
+    check-devel \
+    valgrind \
+    gdb \
+    strace \
+    curl \
+    iproute \
+    iptables \
+    iputils \
+    net-tools \
+    && dnf clean all
+
+# Copy wolfSSL and other libs from dev build (would be better as multi-stage)
+# For now, we'll rebuild minimal versions
+
+# Install runtime dependencies only
+RUN dnf install -y \
+    pam \
+    libseccomp \
+    readline \
+    lz4 \
+    libnl3 \
+    krb5-libs \
+    && dnf clean all
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]

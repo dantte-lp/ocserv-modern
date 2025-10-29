@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Development environment with all build dependencies
+  dev:
+    container_name: ocserv-dev
+    image: oraclelinux:9
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace:Z
+      - dev-cache:/root/.cache:Z
+    environment:
+      - LANG=C.UTF-8
+      - TZ=UTC
+    command: /bin/bash
+    tty: true
+    stdin_open: true
+    networks:
+      - ocserv-net
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - WOLFSSL_VERSION=5.7.4
+        - LIBUV_VERSION=1.48.0
+
+  # Testing environment
+  test:
+    container_name: ocserv-test
+    image: oraclelinux:9
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace:Z
+    environment:
+      - LANG=C.UTF-8
+      - TZ=UTC
+      - CI=true
+    command: /bin/bash -c "cd /workspace && make test"
+    networks:
+      - ocserv-net
+    depends_on:
+      - dev
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+
+  # Build environment for release builds
+  build:
+    container_name: ocserv-build
+    image: oraclelinux:9
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace:Z
+      - build-artifacts:/artifacts:Z
+    environment:
+      - LANG=C.UTF-8
+      - TZ=UTC
+      - BUILD_TYPE=release
+    command: /bin/bash
+    networks:
+      - ocserv-net
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+
+volumes:
+  dev-cache:
+  build-artifacts:
+
+networks:
+  ocserv-net:
+    driver: bridge

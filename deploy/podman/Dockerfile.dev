@@ -1,0 +1,145 @@
+FROM oraclelinux:9
+
+LABEL maintainer="ocserv-modern development team"
+LABEL description="Development environment for ocserv-modern with wolfSSL and modern C libraries"
+
+# Install base development tools
+RUN dnf install -y \
+    gcc \
+    gcc-c++ \
+    make \
+    cmake \
+    meson \
+    ninja-build \
+    autoconf \
+    automake \
+    libtool \
+    pkgconfig \
+    git \
+    vim \
+    gdb \
+    valgrind \
+    strace \
+    perf \
+    wget \
+    curl \
+    tar \
+    xz \
+    bzip2 \
+    && dnf clean all
+
+# Install dependencies
+RUN dnf install -y \
+    pam-devel \
+    libseccomp-devel \
+    readline-devel \
+    lz4-devel \
+    libnl3-devel \
+    krb5-devel \
+    libev-devel \
+    protobuf-c-devel \
+    json-c-devel \
+    check-devel \
+    && dnf clean all
+
+# Build and install wolfSSL from source
+ARG WOLFSSL_VERSION=5.7.4
+RUN cd /tmp && \
+    wget https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}-stable.tar.gz && \
+    tar xzf v${WOLFSSL_VERSION}-stable.tar.gz && \
+    cd wolfssl-${WOLFSSL_VERSION}-stable && \
+    ./autogen.sh && \
+    ./configure \
+        --enable-tls13 \
+        --enable-dtls \
+        --enable-dtls13 \
+        --enable-session-ticket \
+        --enable-alpn \
+        --enable-sni \
+        --enable-secure-renegotiation \
+        --enable-extended-master \
+        --enable-ocsp \
+        --enable-crl \
+        --enable-aesni \
+        --enable-intelasm \
+        --disable-oldtls \
+        --enable-harden \
+        --enable-sp \
+        --enable-sp-asm \
+        --enable-opensslextra \
+        --enable-opensslall \
+        --prefix=/usr/local \
+        CFLAGS="-O3 -march=native -mtune=native" && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/wolfssl-*
+
+# Build and install libuv from source
+ARG LIBUV_VERSION=1.48.0
+RUN cd /tmp && \
+    wget https://github.com/libuv/libuv/archive/v${LIBUV_VERSION}.tar.gz && \
+    tar xzf v${LIBUV_VERSION}.tar.gz && \
+    cd libuv-${LIBUV_VERSION} && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DBUILD_TESTING=OFF && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/libuv-*
+
+# Build and install llhttp from source
+RUN cd /tmp && \
+    git clone --depth 1 --branch release/v9.2.1 https://github.com/nodejs/llhttp.git && \
+    cd llhttp && \
+    npm install && \
+    make && \
+    cp -a build/libllhttp.* /usr/local/lib/ && \
+    cp -a include/llhttp.h /usr/local/include/ && \
+    ldconfig && \
+    cd / && rm -rf /tmp/llhttp || true
+
+# Install cJSON
+RUN cd /tmp && \
+    git clone --depth 1 --branch v1.7.18 https://github.com/DaveGamble/cJSON.git && \
+    cd cJSON && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DENABLE_CJSON_TEST=OFF && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/cJSON
+
+# Install mimalloc
+RUN cd /tmp && \
+    git clone --depth 1 --branch v2.1.7 https://github.com/microsoft/mimalloc.git && \
+    cd mimalloc && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DMI_BUILD_TESTS=OFF && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/mimalloc
+
+# Install linenoise (header-only, just copy files)
+RUN cd /tmp && \
+    git clone --depth 1 https://github.com/antirez/linenoise.git && \
+    cp linenoise/linenoise.h /usr/local/include/ && \
+    cp linenoise/linenoise.c /usr/local/src/ && \
+    rm -rf /tmp/linenoise
+
+# Create workspace directory
+RUN mkdir -p /workspace
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]

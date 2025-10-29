@@ -1,0 +1,39 @@
+FROM oraclelinux:9
+
+LABEL maintainer="ocserv-modern development team"
+LABEL description="Build environment for release builds of ocserv-modern"
+
+# Install build tools
+RUN dnf install -y \
+    gcc \
+    gcc-c++ \
+    make \
+    cmake \
+    meson \
+    ninja-build \
+    autoconf \
+    automake \
+    libtool \
+    pkgconfig \
+    git \
+    tar \
+    xz \
+    rpm-build \
+    && dnf clean all
+
+# Install dependencies
+RUN dnf install -y \
+    pam-devel \
+    libseccomp-devel \
+    readline-devel \
+    lz4-devel \
+    libnl3-devel \
+    krb5-devel \
+    && dnf clean all
+
+# Copy pre-built libraries from artifacts or rebuild
+# This would be optimized with proper multi-stage builds
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]
