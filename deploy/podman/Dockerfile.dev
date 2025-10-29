@@ -61,18 +61,6 @@ RUN dnf install -y \
     rubygems \
     && dnf clean all
 
-# Build and install cppcheck from source (not available in OL10 repos)
-RUN cd /tmp && \
-    git clone --depth 1 --branch 2.18.3 https://github.com/danmar/cppcheck.git && \
-    cd cppcheck && \
-    mkdir build && cd build && \
-    cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    make -j$(nproc) && \
-    make install && \
-    cd /tmp && rm -rf cppcheck
-
 # Install Ruby gems for Ceedling
 RUN gem install --no-document \
     rake \
@@ -89,6 +77,18 @@ RUN cd /tmp && \
     make -j$(nproc) && \
     make install && \
     cd /tmp && rm -rf cmake-*
+
+# Build and install cppcheck from source (requires CMake)
+RUN cd /tmp && \
+    git clone --depth 1 --branch 2.18.3 https://github.com/danmar/cppcheck.git && \
+    cd cppcheck && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    cd /tmp && rm -rf cppcheck
 
 # Build and install Doxygen 1.15.0 from source
 RUN cd /tmp && \
