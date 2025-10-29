@@ -565,6 +565,178 @@ Key decisions will be tracked here as the project progresses.
 
 ---
 
+## Upstream Issues Integration (ocserv-improvements)
+
+**Repository**: `/opt/projects/repositories/ocserv-improvements`
+**Status**: ⏸️ Review in progress
+**Priority**: HIGH (Security issues must be addressed in modern version)
+
+### Overview
+
+The ocserv-improvements repository tracks **119 upstream issues** from gitlab.com/openconnect/ocserv with comprehensive analysis and prioritization. These issues represent real-world bugs, security vulnerabilities, and feature requests that should be considered during the ocserv-modern refactoring.
+
+### Critical Security Issues (Must Address)
+
+**Priority**: P0 (CRITICAL) - Must fix in v2.0.0
+
+1. **#585** - TLS version enforcement broken (18h) 🔴
+   - **Issue**: Compliance requirement - forced TLS version settings not working
+   - **Impact**: Security compliance, can't enforce TLS 1.2/1.3 only
+   - **Files**: `src/main-sec.c`, TLS configuration
+   - **US**: Create US-031 for priority string parser TLS version handling
+
+2. **#323** - Plain password auth as secondary method broken (18h) 🔴
+   - **Issue**: Multi-factor authentication broken
+   - **Impact**: MFA deployments can't use plain password as second factor
+   - **Files**: `src/auth/`
+   - **US**: Create US-032 for auth chain handling
+
+3. **#638** - VPN worker stuck in cstp_send() (20h) 🔴
+   - **Issue**: Potential deadlock in worker process
+   - **Impact**: DoS vector, worker hangs
+   - **Files**: `src/worker-vpn.c`, network I/O
+   - **US**: Create US-033 for async I/O refactoring (libuv will help!)
+
+4. **#404** - Crashes with pam_duo (20h) 🔴
+   - **Issue**: Segfault when using Duo authentication
+   - **Impact**: DoS, production outages
+   - **Files**: PAM integration
+   - **US**: Create US-034 for robust PAM error handling
+
+5. **#624** - Camouflage with certificate groups (20h) 🔴
+   - **Issue**: Authorization bypass - group filtering not working
+   - **Impact**: Security vulnerability, unauthorized access
+   - **Files**: Certificate validation, group matching
+   - **US**: Create US-035 for certificate group authorization
+
+### Client Compatibility Issues (High Priority)
+
+**Priority**: P1 (HIGH) - Important for Cisco compatibility
+
+1. **#665** - Clavister OneConnect GnuTLS handshake error (20h) 🟡
+   - **Impact**: Client can't connect
+   - **Dependency**: Related to #585 (TLS configuration)
+   - **US**: Part of US-017 (client compatibility testing)
+
+2. **#667** - DNS servers not added to client (20h) 🟡
+   - **Impact**: DNS resolution broken for some clients
+   - **Files**: Protocol handlers, DNS configuration
+   - **US**: Create US-036 for DNS push improvements
+
+3. **#636** - Google Auth OIDC support (20h) 🟡
+   - **Impact**: Modern authentication method
+   - **Files**: `src/auth/`, OIDC implementation
+   - **Note**: JWT/JOSE considerations with wolfSSL (see critical analysis v2)
+   - **US**: Create US-037 for OIDC integration
+
+### Build & Compilation Fixes (Quick Wins)
+
+**Priority**: P2 (MEDIUM) - Easy to fix, wide impact
+
+1. **#579** - Multiple definition errors with GCC 10+ (3h)
+   - **Impact**: Compilation fails on modern GCC
+   - **US**: Fix during US-015 (cross-platform builds)
+
+2. **#563** - Compilation fails on musl (3h)
+   - **Impact**: Alpine Linux compatibility
+   - **US**: Fix during US-015 (cross-platform builds)
+
+3. **#448** - Build fails with --disable-seccomp (3h)
+   - **Impact**: Configuration option broken
+   - **US**: Fix during US-015 (cross-platform builds)
+
+4. **#306** - Build fails with GnuTLS 3.4.0 (3h)
+   - **Impact**: Legacy GnuTLS compatibility
+   - **Note**: Will be replaced with wolfSSL in v2.0.0
+   - **Action**: Document breaking change in release notes
+
+5. **#152** - Build fails on FreeBSD (3h)
+   - **Impact**: Platform support
+   - **US**: Fix during US-015 (cross-platform builds)
+
+### Configuration Issues
+
+**Priority**: P2 (MEDIUM)
+
+1. **#664** - Socket name not in sync (18h)
+   - **Impact**: Configuration mismatch
+   - **US**: Create US-038 for config validation
+
+2. **#372** - Max-same-clients per user not working (6h)
+   - **Impact**: Limit enforcement broken
+   - **US**: Create US-039 for client tracking
+
+### Features & Enhancements
+
+**Priority**: P3 (LOW) - Post v2.0.0
+
+1. **#668** - Select user group from SSL-cert (18h)
+   - **US**: Create US-040 for certificate-based group selection
+
+2. **#666** - Change "vpn" word in config-auth XML (12h)
+   - **US**: Create US-041 for XML customization
+
+### Long-Term Features (v3.0.0+)
+
+**Priority**: P3 (DEFERRED)
+
+1. **#655** - Support for OpenConnect v9.x (80h)
+   - **Impact**: Major protocol version compatibility
+   - **Timeline**: After v2.0.0 release
+
+2. **#650** - HTTP/2 support (60h)
+   - **Note**: We're already planning llhttp integration
+   - **Action**: Evaluate HTTP/2 during Phase 3
+
+3. **#641** - IPv6-only mode support (100h)
+   - **Impact**: Full IPv6 stack
+   - **Timeline**: v3.0.0 consideration
+
+### Integration Plan
+
+**Phase 1: Security Critical (Sprint 2-3)**
+- US-031 to US-035: Security issues (5 stories, ~96 hours)
+- Must be addressed before v2.0.0-beta
+
+**Phase 2: Client Compatibility (Sprint 4-5)**
+- US-036 to US-037: DNS, OIDC (2 stories, ~40 hours)
+- Critical for Cisco Secure Client compatibility
+
+**Phase 3: Build & Config (Sprint 6)**
+- US-038 to US-041: Configuration and build fixes (4 stories, ~45 hours)
+- Quick wins for cross-platform support
+
+**Phase 4: Features (v2.1.0+)**
+- Remaining P3 issues after v2.0.0 release
+
+### Metrics from ocserv-improvements
+
+- **Total issues analyzed**: 119
+- **Security critical**: 5 (must fix)
+- **High priority**: 10 (should fix)
+- **Medium priority**: 94 (nice to have)
+- **Total estimated effort**: 2,775 hours
+- **Relevant for v2.0.0**: ~200-250 hours (security + high priority)
+
+### Action Items
+
+- [ ] Create User Stories US-031 to US-041 (11 new stories)
+- [ ] Add to product backlog with priorities
+- [ ] Estimate story points (Fibonacci scale)
+- [ ] Schedule in sprints 2-6
+- [ ] Review with security audit team
+- [ ] Document breaking changes from upstream
+
+### References
+
+- **Repository**: `/opt/projects/repositories/ocserv-improvements`
+- **Roadmap**: `ocserv-improvements/roadmap/ocserv_roadmap.md`
+- **Analysis**: `ocserv-improvements/analysis/ANALYSIS_SUMMARY.md`
+- **TODO**: `ocserv-improvements/TODO.md`
+- **Upstream issues**: https://gitlab.com/openconnect/ocserv/-/issues
+
+---
+
 ## Research & Future Exploration
 
 ### ExpressVPN Lightway Protocol Investigation
