@@ -48,6 +48,7 @@ RUN dnf install -y \
     gmp-devel \
     libtasn1-devel \
     p11-kit-devel \
+    openssl-devel \
     && dnf clean all
 
 # Install code quality and documentation tools
