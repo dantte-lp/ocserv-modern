@@ -1075,27 +1075,112 @@ int tls_validate_priority_string(const char *priority,
 }
 
 /* ============================================================================
- * Utility Functions (to be implemented)
+ * Utility Functions
  * ============================================================================ */
 
 size_t priority_config_dump(const priority_config_t *config,
                              char *buffer,
                              size_t buffer_len)
 {
-    // TODO: Implement in next commit
-    (void)config;
-    (void)buffer;
-    (void)buffer_len;
-    return 0;
+    if (config == nullptr || buffer == nullptr || buffer_len == 0) {
+        return 0;
+    }
+
+    size_t offset = 0;
+
+    // Base keyword
+    if (config->has_base_keyword && config->base_keyword != nullptr) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Base keyword: %s\n", config->base_keyword);
+    }
+
+    // Enabled versions
+    if (config->enabled_versions != 0) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Enabled versions: ");
+        if (config->enabled_versions & (1U << TLS_VERSION_SSL3))
+            offset += snprintf(buffer + offset, buffer_len - offset, "SSL3.0 ");
+        if (config->enabled_versions & (1U << TLS_VERSION_TLS10))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.0 ");
+        if (config->enabled_versions & (1U << TLS_VERSION_TLS11))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.1 ");
+        if (config->enabled_versions & (1U << TLS_VERSION_TLS12))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.2 ");
+        if (config->enabled_versions & (1U << TLS_VERSION_TLS13))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.3 ");
+        offset += snprintf(buffer + offset, buffer_len - offset, "\n");
+    }
+
+    // Disabled versions
+    if (config->disabled_versions != 0) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Disabled versions: ");
+        if (config->disabled_versions & (1U << TLS_VERSION_SSL3))
+            offset += snprintf(buffer + offset, buffer_len - offset, "SSL3.0 ");
+        if (config->disabled_versions & (1U << TLS_VERSION_TLS10))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.0 ");
+        if (config->disabled_versions & (1U << TLS_VERSION_TLS11))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.1 ");
+        if (config->disabled_versions & (1U << TLS_VERSION_TLS12))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.2 ");
+        if (config->disabled_versions & (1U << TLS_VERSION_TLS13))
+            offset += snprintf(buffer + offset, buffer_len - offset, "TLS1.3 ");
+        offset += snprintf(buffer + offset, buffer_len - offset, "\n");
+    }
+
+    // Modifiers
+    if (config->server_precedence)
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Server precedence: YES\n");
+    if (config->compat_mode)
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Compatibility mode: YES\n");
+    if (config->require_pfs)
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Perfect forward secrecy: REQUIRED\n");
+
+    // Security level
+    if (config->min_security_bits > 0)
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Minimum security: %d bits\n", config->min_security_bits);
+
+    return offset;
 }
 
 size_t wolfssl_config_dump(const wolfssl_config_t *wolfssl_cfg,
                             char *buffer,
                             size_t buffer_len)
 {
-    // TODO: Implement in next commit
-    (void)wolfssl_cfg;
-    (void)buffer;
-    (void)buffer_len;
-    return 0;
+    if (wolfssl_cfg == nullptr || buffer == nullptr || buffer_len == 0) {
+        return 0;
+    }
+
+    size_t offset = 0;
+
+    // TLS 1.2 cipher list
+    if (wolfssl_cfg->has_cipher_list) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "TLS 1.2 cipher list: %s\n", wolfssl_cfg->cipher_list);
+    }
+
+    // TLS 1.3 cipher suites
+    if (wolfssl_cfg->has_ciphersuites) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "TLS 1.3 cipher suites: %s\n", wolfssl_cfg->ciphersuites);
+    }
+
+    // Version range
+    if (wolfssl_cfg->has_version_range) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Version range: min=0x%04x max=0x%04x\n",
+                          wolfssl_cfg->min_version, wolfssl_cfg->max_version);
+    }
+
+    // Options
+    if (wolfssl_cfg->options != 0) {
+        offset += snprintf(buffer + offset, buffer_len - offset,
+                          "Options flags: 0x%08lx\n", wolfssl_cfg->options);
+    }
+
+    return offset;
 }
