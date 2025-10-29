@@ -1,0 +1,10 @@
+=== System Resources - gnutls ===
+Timestamp: Wed Oct 29 10:31:52 UTC 2025
+
+Process Info:
+    PID    PPID CMD                         %MEM %CPU   RSS    VSZ
+    133     121 /workspace/poc-server-gnutl  0.0  5.5  5020   8972
+
+Memory Map:
+ total             8976K
+
