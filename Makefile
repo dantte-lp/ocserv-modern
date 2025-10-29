@@ -87,6 +87,11 @@ tests/unit/test_tls_wolfssl: tests/unit/test_tls_wolfssl.c src/crypto/tls_wolfss
 	@echo "  CC      $@"
 	@$(CC) $(CFLAGS) -DUSE_WOLFSSL $^ -o $@ $(shell pkg-config --libs wolfssl 2>/dev/null || echo "-lwolfssl")
 
+# Priority parser unit tests (requires wolfSSL for implementation)
+tests/unit/test_priority_parser: tests/unit/test_priority_parser.c src/crypto/priority_parser.c src/crypto/tls_wolfssl.o
+	@echo "  CC      $@"
+	@$(CC) $(CFLAGS) -DUSE_WOLFSSL $^ -o $@ $(shell pkg-config --libs wolfssl 2>/dev/null || echo "-lwolfssl")
+
 # Run unit tests for current backend
 test-unit: $(BACKEND_LIB)
 ifeq ($(BACKEND),gnutls)
@@ -98,6 +103,13 @@ else
 	@$(MAKE) -s tests/unit/test_tls_wolfssl BACKEND=wolfssl
 	@LD_LIBRARY_PATH=/usr/local/lib:$$LD_LIBRARY_PATH ./tests/unit/test_tls_wolfssl
 endif
+
+# Run priority parser tests
+test-priority-parser:
+	@echo "Building priority parser tests..."
+	@$(MAKE) -s tests/unit/test_priority_parser BACKEND=wolfssl
+	@echo "Running priority parser tests..."
+	@LD_LIBRARY_PATH=/usr/local/lib:$$LD_LIBRARY_PATH ./tests/unit/test_priority_parser
 
 # Run unit tests for both backends
 test-both:
