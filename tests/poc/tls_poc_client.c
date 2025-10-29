@@ -12,6 +12,8 @@
  * Purpose: Proof of Concept TLS client to test echo server and measure performance.
  */
 
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,22 +28,21 @@
 #include "../../src/crypto/tls_abstract.h"
 
 /* Configuration */
-constexpr size_t BUFFER_SIZE = 16'384;
-constexpr int DEFAULT_PORT = 4433;
-constexpr const char *DEFAULT_HOST = "127.0.0.1";
+#define DEFAULT_PORT 4433
+#define DEFAULT_HOST "127.0.0.1"
 
 /* Test sizes */
 static const size_t test_sizes[] = {
     1,           // 1 byte
     64,          // 64 bytes
     256,         // 256 bytes
-    1'024,       // 1 KB
-    4'096,       // 4 KB
-    16'384,      // 16 KB
-    65'536,      // 64 KB
+    1024,        // 1 KB
+    4096,        // 4 KB
+    16384,       // 16 KB
+    65536,      // 64 KB
 };
 
-constexpr size_t NUM_TEST_SIZES = sizeof(test_sizes) / sizeof(test_sizes[0]);
+#define NUM_TEST_SIZES (sizeof(test_sizes) / sizeof(test_sizes[0]))
 
 /* Statistics */
 typedef struct {
@@ -431,7 +432,10 @@ int main(int argc, char **argv) {
     }
 
     // Graceful shutdown
-    tls_bye(session);
+    ret = tls_bye(session);
+    if (ret != TLS_E_SUCCESS && verbose) {
+        fprintf(stderr, "Warning: TLS shutdown failed: %s\n", tls_strerror(ret));
+    }
     close(sockfd);
     tls_global_deinit();
 

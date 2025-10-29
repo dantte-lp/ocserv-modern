@@ -12,6 +12,10 @@ tests/unit/test_*
 tests/poc/tls_poc_server
 tests/poc/tls_poc_client
 
+# PoC binaries (built in project root)
+poc-server
+poc-client
+
 # Benchmark results
 *.json
 !docs/**/*.json
