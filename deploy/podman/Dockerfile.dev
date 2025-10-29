@@ -157,7 +157,7 @@ RUN cd /tmp && \
         --enable-hrrcookie \
         --enable-quic \
         --prefix=/usr/local \
-        CFLAGS="-O2 -g -fstack-protector-strong" \
+        CFLAGS="-std=gnu11 -O2 -g -fstack-protector-strong" \
         LDFLAGS="-Wl,-z,relro -Wl,-z,now" && \
     make -j$(nproc) && \
     make install && \
