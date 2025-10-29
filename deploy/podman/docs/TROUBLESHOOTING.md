@@ -67,7 +67,7 @@ podman pull registry.access.redhat.com/ubi9/ubi:latest
 
 4. Use alternative registry:
 ```bash
-export BASE_IMAGE="docker.io/library/oraclelinux:9"
+export BASE_IMAGE="docker.io/library/oraclelinux:10"
 ./scripts/build-dev.sh
 ```
 

@@ -17,7 +17,7 @@ make dev
 ### 1. Install Prerequisites
 
 ```bash
-# Oracle Linux 9 / RHEL 9
+# Oracle Linux 10 / RHEL 10
 sudo dnf install -y podman buildah skopeo crun fuse-overlayfs slirp4netns container-selinux
 
 # Podman Compose

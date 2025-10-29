@@ -55,7 +55,7 @@ Four specialized container environments:
 ### Required Software
 
 ```bash
-# Oracle Linux 9 / RHEL 9
+# Oracle Linux 10 / RHEL 10
 sudo dnf install podman buildah skopeo crun
 
 # Podman Compose

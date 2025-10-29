@@ -93,8 +93,6 @@ buildah run "$container" -- bash -c "dnf install -y \
     gdb \
     valgrind \
     strace \
-    ltrace \
-    perf \
     wget \
     curl \
     tar \

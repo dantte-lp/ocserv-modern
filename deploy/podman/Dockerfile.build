@@ -1,4 +1,4 @@
-FROM oraclelinux:9
+FROM oraclelinux:10
 
 LABEL maintainer="ocserv-modern development team"
 LABEL description="Build environment for release builds of ocserv-modern"
