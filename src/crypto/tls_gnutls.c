@@ -23,6 +23,16 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
+
+/* ============================================================================
+ * Forward Declarations
+ * ============================================================================ */
+
+// Session cache callbacks for GnuTLS
+static int gnutls_db_store_cb(void *ptr, gnutls_datum_t key, gnutls_datum_t data);
+static gnutls_datum_t gnutls_db_retrieve_cb(void *ptr, gnutls_datum_t key);
+static int gnutls_db_remove_cb(void *ptr, gnutls_datum_t key);
 
 /* ============================================================================
  * Global State
@@ -406,6 +416,136 @@ void tls_context_free(tls_context_t *ctx) {
     return TLS_E_SUCCESS;
 }
 
+/* ============================================================================
+ * Session Cache Callback Adapters
+ * ============================================================================ */
+
+/**
+ * GnuTLS session store callback adapter
+ *
+ * Called by GnuTLS when a new session should be stored in the cache.
+ *
+ * @param ptr User data pointer (points to tls_context_t)
+ * @param key Session key (session ID)
+ * @param data Serialized session data
+ * @return GNUTLS_E_SUCCESS (0) on success, negative error code on failure
+ */
+static int gnutls_db_store_cb(void *ptr, gnutls_datum_t key, gnutls_datum_t data) {
+    if (ptr == nullptr || key.data == nullptr || key.size == 0) {
+        return GNUTLS_E_DB_ERROR;
+    }
+
+    tls_context_t *ctx = (tls_context_t *)ptr;
+    if (ctx->db_store == nullptr) {
+        return GNUTLS_E_SUCCESS; // No callback registered, silently succeed
+    }
+
+    // Validate sizes
+    if (key.size > TLS_MAX_SESSION_ID_SIZE || data.size > TLS_MAX_SESSION_DATA_SIZE) {
+        return GNUTLS_E_DB_ERROR;
+    }
+
+    // Build cache entry
+    tls_session_cache_entry_t entry = {0};
+    memcpy(entry.session_id, key.data, key.size);
+    entry.session_id_size = key.size;
+    memcpy(entry.session_data, data.data, data.size);
+    entry.session_data_size = data.size;
+
+    // Calculate expiration time (default 300 seconds)
+    time_t now = time(nullptr);
+    entry.expiration = now + 300;
+
+    // Remote address will be filled by application if needed
+    entry.remote_addr_len = 0;
+
+    // Call user's store callback
+    int result = ctx->db_store(ctx->db_userdata, &entry);
+    return (result == 0) ? GNUTLS_E_SUCCESS : GNUTLS_E_DB_ERROR;
+}
+
+/**
+ * GnuTLS session retrieve callback adapter
+ *
+ * Called by GnuTLS when attempting to resume a session.
+ *
+ * @param ptr User data pointer (points to tls_context_t)
+ * @param key Session key (session ID) to retrieve
+ * @return gnutls_datum_t containing session data, or {nullptr, 0} if not found
+ *
+ * Note: GnuTLS will call gnutls_free() on the returned data, so we must allocate
+ *       it using gnutls_malloc().
+ */
+static gnutls_datum_t gnutls_db_retrieve_cb(void *ptr, gnutls_datum_t key) {
+    gnutls_datum_t result = {.data = nullptr, .size = 0};
+
+    if (ptr == nullptr || key.data == nullptr || key.size == 0) {
+        return result;
+    }
+
+    tls_context_t *ctx = (tls_context_t *)ptr;
+    if (ctx->db_retrieve == nullptr) {
+        return result; // No callback registered
+    }
+
+    // Retrieve session from cache
+    tls_session_cache_entry_t entry = {0};
+    int ret = ctx->db_retrieve(ctx->db_userdata, key.data, key.size, &entry);
+    if (ret != 0) {
+        return result; // Not found or error
+    }
+
+    // Check expiration
+    time_t now = time(nullptr);
+    if (entry.expiration > 0 && now > entry.expiration) {
+        // Session expired, remove it
+        if (ctx->db_remove != nullptr) {
+            ctx->db_remove(ctx->db_userdata, key.data, key.size);
+        }
+        return result;
+    }
+
+    // Allocate memory for GnuTLS (it will free it)
+    result.data = (unsigned char *)gnutls_malloc(entry.session_data_size);
+    if (result.data == nullptr) {
+        return result;
+    }
+
+    // Copy session data
+    memcpy(result.data, entry.session_data, entry.session_data_size);
+    result.size = (unsigned int)entry.session_data_size;
+
+    return result;
+}
+
+/**
+ * GnuTLS session remove callback adapter
+ *
+ * Called by GnuTLS when a session should be removed from the cache.
+ *
+ * @param ptr User data pointer (points to tls_context_t)
+ * @param key Session key (session ID) to remove
+ * @return GNUTLS_E_SUCCESS (0) on success, negative error code on failure
+ */
+static int gnutls_db_remove_cb(void *ptr, gnutls_datum_t key) {
+    if (ptr == nullptr || key.data == nullptr || key.size == 0) {
+        return GNUTLS_E_DB_ERROR;
+    }
+
+    tls_context_t *ctx = (tls_context_t *)ptr;
+    if (ctx->db_remove == nullptr) {
+        return GNUTLS_E_SUCCESS; // No callback registered
+    }
+
+    // Call user's remove callback
+    int result = ctx->db_remove(ctx->db_userdata, key.data, key.size);
+    return (result == 0) ? GNUTLS_E_SUCCESS : GNUTLS_E_DB_ERROR;
+}
+
+/* ============================================================================
+ * Session Cache Configuration
+ * ============================================================================ */
+
 [[nodiscard]] int tls_context_set_session_cache(tls_context_t *ctx,
                                                   tls_db_store_func_t store_func,
                                                   tls_db_retrieve_func_t retrieve_func,
@@ -415,12 +555,14 @@ void tls_context_free(tls_context_t *ctx) {
         return TLS_E_INVALID_PARAMETER;
     }
 
+    // Store callback pointers in our context
+    // Note: GnuTLS session cache callbacks are set per-session (not per-context),
+    //       so we store them here and apply them in tls_session_new()
     ctx->db_store = store_func;
     ctx->db_retrieve = retrieve_func;
     ctx->db_remove = remove_func;
     ctx->db_userdata = userdata;
 
-    // TODO: Set GnuTLS session DB functions
     return TLS_E_SUCCESS;
 }
 
@@ -506,6 +648,24 @@ void tls_context_free(tls_context_t *ctx) {
     // Set verification requirements
     if (ctx->verify_peer) {
         gnutls_session_set_verify_cert(session->session, nullptr, 0);
+    }
+
+    // Set session cache callbacks (if configured)
+    // GnuTLS requires these to be set per-session, not per-context
+    if (ctx->db_store != nullptr || ctx->db_retrieve != nullptr || ctx->db_remove != nullptr) {
+        // Set user data pointer (our context, so callbacks can access it)
+        gnutls_db_set_ptr(session->session, ctx);
+
+        // Wire up the three callback functions
+        if (ctx->db_store != nullptr) {
+            gnutls_db_set_store_function(session->session, gnutls_db_store_cb);
+        }
+        if (ctx->db_retrieve != nullptr) {
+            gnutls_db_set_retrieve_function(session->session, gnutls_db_retrieve_cb);
+        }
+        if (ctx->db_remove != nullptr) {
+            gnutls_db_set_remove_function(session->session, gnutls_db_remove_cb);
+        }
     }
 
     ctx->sessions_created++;

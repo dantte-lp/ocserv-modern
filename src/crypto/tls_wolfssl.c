@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
 
 // C23 standard compliance check (accept C2x/C20 from GCC 14 as it provides C23 features)
 #if __STDC_VERSION__ < 202000L
@@ -32,6 +33,14 @@
  * ============================================================================ */
 
 static int wolfssl_verify_cb(int preverify, WOLFSSL_X509_STORE_CTX* x509_ctx);
+
+// Session cache callbacks
+static int wolfssl_session_new_cb(WOLFSSL *ssl, WOLFSSL_SESSION *session);
+static WOLFSSL_SESSION* wolfssl_session_get_cb(WOLFSSL *ssl,
+                                                const unsigned char *id,
+                                                int id_len,
+                                                int *copy);
+static void wolfssl_session_remove_cb(WOLFSSL_CTX *ctx, WOLFSSL_SESSION *session);
 
 /* ============================================================================
  * Global State
@@ -500,6 +509,174 @@ int tls_context_set_psk_server_callback(tls_context_t *ctx,
     return TLS_E_SUCCESS;
 }
 
+/* ============================================================================
+ * Session Cache Callback Adapters
+ * ============================================================================ */
+
+/**
+ * wolfSSL new session callback adapter
+ *
+ * Called by wolfSSL when a new session is created and should be stored in the cache.
+ *
+ * @param ssl wolfSSL session handle
+ * @param session wolfSSL session data to store
+ * @return SSL_SUCCESS (0) on success, SSL_FATAL_ERROR (-1) on failure
+ *
+ * Note: This adapter converts wolfSSL's session format to our abstraction format
+ *       and calls the user-provided db_store callback.
+ */
+static int wolfssl_session_new_cb(WOLFSSL *ssl, WOLFSSL_SESSION *session) {
+    if (ssl == nullptr || session == nullptr) {
+        return SSL_FATAL_ERROR;
+    }
+
+    // Get context from session
+    WOLFSSL_CTX *wolf_ctx = wolfSSL_get_SSL_CTX(ssl);
+    if (wolf_ctx == nullptr) {
+        return SSL_FATAL_ERROR;
+    }
+
+    // Extract our context from wolfSSL context's user data
+    tls_context_t *ctx = (tls_context_t *)wolfSSL_CTX_get_ex_data(wolf_ctx, 0);
+    if (ctx == nullptr || ctx->db_store == nullptr) {
+        return SSL_SUCCESS; // No callback registered, silently succeed
+    }
+
+    // Extract session ID
+    unsigned int session_id_len = 0;
+    const unsigned char *session_id = wolfSSL_SESSION_get_id(session, &session_id_len);
+    if (session_id == nullptr || session_id_len == 0 || session_id_len > TLS_MAX_SESSION_ID_SIZE) {
+        return SSL_FATAL_ERROR;
+    }
+
+    // Extract serialized session data
+    unsigned char session_data[TLS_MAX_SESSION_DATA_SIZE];
+    unsigned int session_data_len = (unsigned int)sizeof(session_data);
+    int ret = wolfSSL_i2d_SSL_SESSION(session, session_data, &session_data_len);
+    if (ret != SSL_SUCCESS || session_data_len == 0 || session_data_len > TLS_MAX_SESSION_DATA_SIZE) {
+        return SSL_FATAL_ERROR;
+    }
+
+    // Build cache entry
+    tls_session_cache_entry_t entry = {0};
+    memcpy(entry.session_id, session_id, session_id_len);
+    entry.session_id_size = session_id_len;
+    memcpy(entry.session_data, session_data, session_data_len);
+    entry.session_data_size = session_data_len;
+
+    // Calculate expiration time
+    time_t now = time(nullptr);
+    entry.expiration = now + (ctx->session_timeout_secs > 0 ? ctx->session_timeout_secs : 300);
+
+    // Extract remote address from SSL session (if available)
+    // Note: wolfSSL doesn't provide direct API for this, so we'll leave it empty
+    // The application can fill this in if needed
+    entry.remote_addr_len = 0;
+
+    // Call user's store callback
+    int result = ctx->db_store(ctx->db_userdata, &entry);
+    return (result == 0) ? SSL_SUCCESS : SSL_FATAL_ERROR;
+}
+
+/**
+ * wolfSSL get session callback adapter
+ *
+ * Called by wolfSSL when attempting to resume a session.
+ *
+ * @param ssl wolfSSL session handle
+ * @param id Session ID to retrieve
+ * @param id_len Session ID length
+ * @param copy Output: set to 1 if wolfSSL should make a copy (always 1 for us)
+ * @return Pointer to WOLFSSL_SESSION on success, nullptr if not found
+ *
+ * Note: wolfSSL will call wolfSSL_SESSION_free() on the returned session,
+ *       so we must allocate it dynamically.
+ */
+static WOLFSSL_SESSION* wolfssl_session_get_cb(WOLFSSL *ssl,
+                                                const unsigned char *id,
+                                                int id_len,
+                                                int *copy) {
+    if (ssl == nullptr || id == nullptr || id_len <= 0 || copy == nullptr) {
+        return nullptr;
+    }
+
+    *copy = 1; // wolfSSL should always make a copy
+
+    // Get context
+    WOLFSSL_CTX *wolf_ctx = wolfSSL_get_SSL_CTX(ssl);
+    if (wolf_ctx == nullptr) {
+        return nullptr;
+    }
+
+    tls_context_t *ctx = (tls_context_t *)wolfSSL_CTX_get_ex_data(wolf_ctx, 0);
+    if (ctx == nullptr || ctx->db_retrieve == nullptr) {
+        return nullptr; // No callback registered
+    }
+
+    // Retrieve session from cache
+    tls_session_cache_entry_t entry = {0};
+    int result = ctx->db_retrieve(ctx->db_userdata, id, (size_t)id_len, &entry);
+    if (result != 0) {
+        return nullptr; // Not found or error
+    }
+
+    // Check expiration
+    time_t now = time(nullptr);
+    if (entry.expiration > 0 && now > entry.expiration) {
+        // Session expired, remove it
+        if (ctx->db_remove != nullptr) {
+            ctx->db_remove(ctx->db_userdata, id, (size_t)id_len);
+        }
+        return nullptr;
+    }
+
+    // Deserialize session data
+    const unsigned char *session_data_ptr = entry.session_data;
+    WOLFSSL_SESSION *session = wolfSSL_d2i_SSL_SESSION(nullptr, &session_data_ptr,
+                                                        (long)entry.session_data_size);
+    if (session == nullptr) {
+        // Failed to deserialize, remove corrupted entry
+        if (ctx->db_remove != nullptr) {
+            ctx->db_remove(ctx->db_userdata, id, (size_t)id_len);
+        }
+        return nullptr;
+    }
+
+    return session;
+}
+
+/**
+ * wolfSSL remove session callback adapter
+ *
+ * Called by wolfSSL when a session should be removed from the cache.
+ *
+ * @param ctx wolfSSL context
+ * @param session Session to remove
+ *
+ * Note: This is called when a session is invalidated or expired.
+ */
+static void wolfssl_session_remove_cb(WOLFSSL_CTX *wolf_ctx, WOLFSSL_SESSION *session) {
+    if (wolf_ctx == nullptr || session == nullptr) {
+        return;
+    }
+
+    tls_context_t *ctx = (tls_context_t *)wolfSSL_CTX_get_ex_data(wolf_ctx, 0);
+    if (ctx == nullptr || ctx->db_remove == nullptr) {
+        return; // No callback registered
+    }
+
+    // Extract session ID
+    unsigned int session_id_len = 0;
+    const unsigned char *session_id = wolfSSL_SESSION_get_id(session, &session_id_len);
+    if (session_id != nullptr && session_id_len > 0) {
+        ctx->db_remove(ctx->db_userdata, session_id, (size_t)session_id_len);
+    }
+}
+
+/* ============================================================================
+ * Session Cache Configuration
+ * ============================================================================ */
+
 int tls_context_set_session_cache(tls_context_t *ctx,
                                   tls_db_store_func_t store_func,
                                   tls_db_retrieve_func_t retrieve_func,
@@ -509,14 +686,46 @@ int tls_context_set_session_cache(tls_context_t *ctx,
         return TLS_E_INVALID_PARAMETER;
     }
 
+    // Store callback pointers in our context
     ctx->db_store = store_func;
     ctx->db_retrieve = retrieve_func;
     ctx->db_remove = remove_func;
     ctx->db_userdata = userdata;
 
-    // TODO: Implement session cache callbacks
-    // wolfSSL uses different session cache API than GnuTLS
-    // Need to implement cache_get_cb, cache_new_cb, cache_remove_cb wrappers
+    // Store our context pointer in wolfSSL context for callback access
+    // This allows callbacks to retrieve our context from wolfSSL's context
+    wolfSSL_CTX_set_ex_data(ctx->wolf_ctx, 0, ctx);
+
+    // Wire up wolfSSL session cache callbacks
+    if (store_func != nullptr) {
+        wolfSSL_CTX_sess_set_new_cb(ctx->wolf_ctx, wolfssl_session_new_cb);
+    } else {
+        wolfSSL_CTX_sess_set_new_cb(ctx->wolf_ctx, nullptr);
+    }
+
+    if (retrieve_func != nullptr) {
+        wolfSSL_CTX_sess_set_get_cb(ctx->wolf_ctx, wolfssl_session_get_cb);
+    } else {
+        wolfSSL_CTX_sess_set_get_cb(ctx->wolf_ctx, nullptr);
+    }
+
+    if (remove_func != nullptr) {
+        wolfSSL_CTX_sess_set_remove_cb(ctx->wolf_ctx, wolfssl_session_remove_cb);
+    } else {
+        wolfSSL_CTX_sess_set_remove_cb(ctx->wolf_ctx, nullptr);
+    }
+
+    // Enable session caching in wolfSSL
+    // wolfSSL_CTX_set_session_cache_mode sets the cache mode:
+    // - SSL_SESS_CACHE_OFF: Disable caching
+    // - SSL_SESS_CACHE_SERVER: Enable server-side caching (default for servers)
+    // - SSL_SESS_CACHE_CLIENT: Enable client-side caching (default for clients)
+    if (store_func != nullptr || retrieve_func != nullptr) {
+        long mode = ctx->is_server ? SSL_SESS_CACHE_SERVER : SSL_SESS_CACHE_CLIENT;
+        wolfSSL_CTX_set_session_cache_mode(ctx->wolf_ctx, mode);
+    } else {
+        wolfSSL_CTX_set_session_cache_mode(ctx->wolf_ctx, SSL_SESS_CACHE_OFF);
+    }
 
     return TLS_E_SUCCESS;
 }
