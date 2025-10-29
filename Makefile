@@ -115,11 +115,18 @@ test-both:
 # Proof of Concept (PoC) Server and Client
 # ============================================================================
 
-poc-server: tests/poc/tls_poc_server.c $(BACKEND_OBJ)
+# TLS abstraction dispatcher
+TLS_ABSTRACT_OBJ := src/crypto/tls_abstract.o
+
+src/crypto/tls_abstract.o: src/crypto/tls_abstract.c src/crypto/tls_abstract.h src/crypto/tls_gnutls.h src/crypto/tls_wolfssl.h
+	@echo "  CC      $@"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+poc-server: tests/poc/tls_poc_server.c $(TLS_ABSTRACT_OBJ) $(BACKEND_OBJ)
 	@echo "  CC      $@ ($(BACKEND))"
 	@$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-poc-client: tests/poc/tls_poc_client.c $(BACKEND_OBJ)
+poc-client: tests/poc/tls_poc_client.c $(TLS_ABSTRACT_OBJ) $(BACKEND_OBJ)
 	@echo "  CC      $@ ($(BACKEND))"
 	@$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
@@ -161,6 +168,7 @@ smoke:
 clean:
 	@echo "  CLEAN"
 	@rm -f src/crypto/*.o
+	@rm -f src/crypto/*.d
 	@rm -f *.a
 	@rm -f tests/unit/test_tls_gnutls tests/unit/test_tls_wolfssl
 	@rm -f poc-server poc-client

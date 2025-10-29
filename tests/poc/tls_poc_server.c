@@ -13,9 +13,7 @@
  *          and compare GnuTLS vs wolfSSL performance.
  */
 
-// For usleep on newer POSIX systems
-#define _DEFAULT_SOURCE
-#define _BSD_SOURCE
+#define _POSIX_C_SOURCE 200112L  // For nanosleep()
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -198,8 +196,9 @@ static void handle_client(tls_context_t *ctx, int client_fd,
         ssize_t received = tls_recv(session, buffer, sizeof(buffer));
 
         if (received == TLS_E_AGAIN || received == TLS_E_INTERRUPTED) {
-            // Non-blocking I/O - retry
-            usleep(10000); // 10ms
+            // Non-blocking I/O - retry with 10ms delay
+            struct timespec ts = { .tv_sec = 0, .tv_nsec = 10000000 }; // 10ms
+            nanosleep(&ts, NULL);
             continue;
         }
 

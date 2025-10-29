@@ -73,32 +73,6 @@ void tls_gnutls_deinit(void) {
     }
 }
 
-[[nodiscard]] int tls_global_init(tls_backend_t backend) {
-    if (backend != TLS_BACKEND_GNUTLS) {
-        return TLS_E_INVALID_PARAMETER;
-    }
-
-    return tls_gnutls_init();
-}
-
-void tls_global_deinit(void) {
-    tls_gnutls_deinit();
-}
-
-[[nodiscard]] tls_backend_t tls_get_backend(void) {
-    return g_current_backend;
-}
-
-[[nodiscard]] const char* tls_get_version_string(void) {
-    if (!g_initialized) {
-        return "GnuTLS (not initialized)";
-    }
-
-    static char version_buf[64];
-    snprintf(version_buf, sizeof(version_buf), "GnuTLS %s", gnutls_check_version(nullptr));
-    return version_buf;
-}
-
 /* ============================================================================
  * Error Handling
  * ============================================================================ */
