@@ -9,8 +9,6 @@ RUN dnf install -y \
     gcc-c++ \
     make \
     cmake \
-    meson \
-    ninja-build \
     autoconf \
     automake \
     libtool \
@@ -20,15 +18,13 @@ RUN dnf install -y \
     gdb \
     valgrind \
     strace \
-    perf \
     wget \
-    curl \
     tar \
     xz \
     bzip2 \
     && dnf clean all
 
-# Install dependencies
+# Install dependencies (only available packages in OL10)
 RUN dnf install -y \
     pam-devel \
     libseccomp-devel \
@@ -36,14 +32,16 @@ RUN dnf install -y \
     lz4-devel \
     libnl3-devel \
     krb5-devel \
-    libev-devel \
-    protobuf-c-devel \
     json-c-devel \
-    check-devel \
+    gnutls-devel \
+    nettle-devel \
+    gmp-devel \
+    libtasn1-devel \
+    p11-kit-devel \
     && dnf clean all
 
 # Build and install wolfSSL from source
-ARG WOLFSSL_VERSION=5.7.4
+ARG WOLFSSL_VERSION=5.8.2
 RUN cd /tmp && \
     wget https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}-stable.tar.gz && \
     tar xzf v${WOLFSSL_VERSION}-stable.tar.gz && \
@@ -90,17 +88,6 @@ RUN cd /tmp && \
     make install && \
     ldconfig && \
     cd / && rm -rf /tmp/libuv-*
-
-# Build and install llhttp from source
-RUN cd /tmp && \
-    git clone --depth 1 --branch release/v9.2.1 https://github.com/nodejs/llhttp.git && \
-    cd llhttp && \
-    npm install && \
-    make && \
-    cp -a build/libllhttp.* /usr/local/lib/ && \
-    cp -a include/llhttp.h /usr/local/include/ && \
-    ldconfig && \
-    cd / && rm -rf /tmp/llhttp || true
 
 # Install cJSON
 RUN cd /tmp && \

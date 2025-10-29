@@ -26,22 +26,34 @@ ocserv-modern is a comprehensive refactoring of the OpenConnect VPN Server (ocse
 
 ## Project Status
 
-**Current Phase**: Phase 0 - Project Setup and Planning
-**Release**: v2.0.0-alpha.1 (in development)
-**Timeline**: 50-70 weeks (realistic estimate)
+**Current Phase**: Phase 1 - TLS Backend Implementation ✅
+**Current Sprint**: Sprint 1 (PoC Validation & Benchmarking)
+**Release**: v2.0.0-alpha.1 (in active development)
+**Timeline**: 16-20 sprints (~8-10 months realistic estimate)
 **Status**: ⚠️ Pre-release, not ready for production
 
-### Roadmap
+### Sprint Progress
 
-- ✅ **Sprint 0** (Current): Project initialization, infrastructure setup
-- ⏸️ **Sprint 1**: Critical analysis, Proof of Concept, GO/NO-GO decision
-- ⏸️ **Sprint 2-3**: TLS abstraction layer, testing infrastructure
+- ✅ **Sprint 0** (2025-10-15 to 2025-10-29): **COMPLETED** - TLS abstraction + dual backends
+  - ✅ GnuTLS backend (915 lines, 100% tests pass)
+  - ✅ wolfSSL backend (1,287 lines, 82% tests pass)
+  - ✅ Oracle Linux 10 migration
+  - ✅ Unit testing infrastructure
+  - **Velocity**: 37 story points
+
+- 🔄 **Sprint 1** (2025-10-30 to 2025-11-12): **IN PROGRESS** - PoC validation + benchmarking
+  - ⏳ Fix wolfSSL session creation (HIGH priority)
+  - ⏳ Complete PoC server/client testing
+  - ⏳ Establish GnuTLS performance baseline
+  - ⏳ Make GO/NO-GO decision
+  - **Planned**: 34 story points
+
+- ⏸️ **Sprint 2-3**: Priority string parser + session caching
 - ⏸️ **Sprint 4-7**: Core TLS/DTLS migration
-- ⏸️ **Sprint 8-11**: Comprehensive testing and validation
-- ⏸️ **Sprint 12-14**: Optimization and bug fixing
-- ⏸️ **Sprint 15-17**: Documentation and release
+- ⏸️ **Sprint 8-11**: Worker process integration + testing
+- ⏸️ **Sprint 12+**: Phase 2 (REST API + WebUI)
 
-See [docs/todo/CURRENT.md](docs/todo/CURRENT.md) for detailed progress tracking.
+See [TODO.md](TODO.md) for detailed task tracking and [docs/sprints/](docs/sprints/) for sprint documentation.
 
 ---
 

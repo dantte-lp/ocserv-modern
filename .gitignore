@@ -1,0 +1,46 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.exe
+
+# Test executables
+tests/unit/test_*
+!tests/unit/test_*.c
+tests/poc/tls_poc_server
+tests/poc/tls_poc_client
+
+# Benchmark results
+*.json
+!docs/**/*.json
+
+# Certificate files (generated)
+tests/certs/*.pem
+tests/certs/*.key
+tests/certs/*.crt
+tests/certs/*.csr
+
+# Build directories
+build/
+obj/
+bin/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Podman/Docker
+.buildah/
+
+# Logs
+*.log
+!docs/**/*.log
+
+# Temporary files
+*.tmp
+.DS_Store
