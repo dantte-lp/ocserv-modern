@@ -371,7 +371,7 @@ int priority_tokenize(const char *priority, token_list_t *tokens)
 }
 
 /* ============================================================================
- * Phase 2: Parsing (to be implemented)
+ * Phase 2: Parsing
  * ============================================================================ */
 
 void priority_config_init(priority_config_t *config)
@@ -384,12 +384,303 @@ void priority_config_init(priority_config_t *config)
     config->min_security_bits = 0;  // No minimum by default
 }
 
+/**
+ * Parse base keyword and set defaults
+ */
+static int parse_base_keyword(const char *keyword, size_t keyword_len,
+                              priority_config_t *config)
+{
+    char kw[PRIORITY_MAX_TOKEN_LEN];
+    if (keyword_len >= sizeof(kw)) {
+        return PRIORITY_E_SYNTAX_ERROR;
+    }
+    memcpy(kw, keyword, keyword_len);
+    kw[keyword_len] = '\0';
+
+    config->base_keyword = nullptr;  // Will be set to static string
+
+    if (strcmp(kw, "NORMAL") == 0) {
+        config->base_keyword = "NORMAL";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->min_security_bits = 64;
+    } else if (strcmp(kw, "PERFORMANCE") == 0) {
+        config->base_keyword = "PERFORMANCE";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->min_security_bits = 128;
+    } else if (strcmp(kw, "SECURE128") == 0) {
+        config->base_keyword = "SECURE128";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->min_security_bits = 128;
+    } else if (strcmp(kw, "SECURE192") == 0) {
+        config->base_keyword = "SECURE192";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->min_security_bits = 192;
+    } else if (strcmp(kw, "SECURE256") == 0) {
+        config->base_keyword = "SECURE256";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->min_security_bits = 256;
+    } else if (strcmp(kw, "PFS") == 0) {
+        config->base_keyword = "PFS";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->require_pfs = true;
+        config->min_security_bits = 128;
+    } else if (strcmp(kw, "NONE") == 0) {
+        config->base_keyword = "NONE";
+        config->has_base_keyword = true;
+        config->explicit_none = true;
+        config->enabled_versions = 0;  // Nothing enabled by default
+    } else if (strcmp(kw, "LEGACY") == 0) {
+        config->base_keyword = "LEGACY";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS10) | (1U << TLS_VERSION_TLS11) |
+                                   (1U << TLS_VERSION_TLS12);
+        config->min_security_bits = 0;
+    } else if (strcmp(kw, "SYSTEM") == 0) {
+        // SYSTEM is special - use system-wide policy
+        // For now, treat as NORMAL
+        config->base_keyword = "SYSTEM";
+        config->has_base_keyword = true;
+        config->enabled_versions = (1U << TLS_VERSION_TLS12) | (1U << TLS_VERSION_TLS13);
+        config->min_security_bits = 64;
+    } else {
+        return PRIORITY_E_UNKNOWN_KEYWORD;
+    }
+
+    return PRIORITY_E_SUCCESS;
+}
+
+/**
+ * Parse TLS version specification
+ */
+static int parse_version(const char *version_str, size_t version_len,
+                         bool is_addition, priority_config_t *config)
+{
+    char ver[PRIORITY_MAX_TOKEN_LEN];
+    if (version_len >= sizeof(ver)) {
+        return PRIORITY_E_SYNTAX_ERROR;
+    }
+    memcpy(ver, version_str, version_len);
+    ver[version_len] = '\0';
+
+    tls_version_t version = TLS_VERSION_UNKNOWN;
+
+    if (strcmp(ver, "VERS-SSL3.0") == 0 || strcmp(ver, "VERS-SSL3") == 0) {
+        version = TLS_VERSION_SSL3;
+    } else if (strcmp(ver, "VERS-TLS1.0") == 0) {
+        version = TLS_VERSION_TLS10;
+    } else if (strcmp(ver, "VERS-TLS1.1") == 0) {
+        version = TLS_VERSION_TLS11;
+    } else if (strcmp(ver, "VERS-TLS1.2") == 0) {
+        version = TLS_VERSION_TLS12;
+    } else if (strcmp(ver, "VERS-TLS1.3") == 0) {
+        version = TLS_VERSION_TLS13;
+    } else if (strcmp(ver, "VERS-DTLS1.0") == 0) {
+        version = TLS_VERSION_DTLS10;
+    } else if (strcmp(ver, "VERS-DTLS1.2") == 0) {
+        version = TLS_VERSION_DTLS12;
+    } else if (strcmp(ver, "VERS-DTLS1.3") == 0) {
+        version = TLS_VERSION_DTLS13;
+    } else {
+        return PRIORITY_E_INVALID_VERSION;
+    }
+
+    if (is_addition) {
+        config->enabled_versions |= (1U << version);
+        config->disabled_versions &= ~(1U << version);
+    } else {
+        config->disabled_versions |= (1U << version);
+        config->enabled_versions &= ~(1U << version);
+    }
+
+    return PRIORITY_E_SUCCESS;
+}
+
+/**
+ * Parse modifier (% keyword)
+ */
+static int parse_modifier(const char *modifier_str, size_t modifier_len,
+                          priority_config_t *config)
+{
+    char mod[PRIORITY_MAX_TOKEN_LEN];
+    if (modifier_len >= sizeof(mod)) {
+        return PRIORITY_E_SYNTAX_ERROR;
+    }
+    memcpy(mod, modifier_str, modifier_len);
+    mod[modifier_len] = '\0';
+
+    if (strcmp(mod, "%SERVER_PRECEDENCE") == 0) {
+        config->server_precedence = true;
+    } else if (strcmp(mod, "%COMPAT") == 0) {
+        config->compat_mode = true;
+    } else if (strcmp(mod, "%NO_EXTENSIONS") == 0) {
+        config->no_extensions = true;
+    } else if (strcmp(mod, "%FORCE_SESSION_HASH") == 0) {
+        config->force_session_hash = true;
+    } else if (strcmp(mod, "%DUMBFW") == 0) {
+        config->dumb_fw_padding = true;
+    } else if (strcmp(mod, "%FALLBACK_SCSV") == 0) {
+        config->fallback_scsv = true;
+    } else {
+        // Unknown modifier - log warning but don't fail
+        // Some modifiers may not have wolfSSL equivalents
+        return PRIORITY_E_SUCCESS;  // Tolerate unknown modifiers
+    }
+
+    return PRIORITY_E_SUCCESS;
+}
+
+/**
+ * Parse cipher specification
+ */
+static int parse_cipher(const char *cipher_str, size_t cipher_len,
+                        bool is_addition, priority_config_t *config)
+{
+    if (cipher_len >= PRIORITY_MAX_CIPHER_NAME) {
+        return PRIORITY_E_INVALID_CIPHER;
+    }
+
+    if (is_addition) {
+        if (config->enabled_cipher_count >= PRIORITY_MAX_CIPHERS) {
+            return PRIORITY_E_TOO_COMPLEX;
+        }
+        memcpy(config->enabled_ciphers[config->enabled_cipher_count],
+               cipher_str, cipher_len);
+        config->enabled_ciphers[config->enabled_cipher_count][cipher_len] = '\0';
+        config->enabled_cipher_count++;
+    } else {
+        if (config->disabled_cipher_count >= PRIORITY_MAX_CIPHERS) {
+            return PRIORITY_E_TOO_COMPLEX;
+        }
+        memcpy(config->disabled_ciphers[config->disabled_cipher_count],
+               cipher_str, cipher_len);
+        config->disabled_ciphers[config->disabled_cipher_count][cipher_len] = '\0';
+        config->disabled_cipher_count++;
+    }
+
+    return PRIORITY_E_SUCCESS;
+}
+
 int priority_parse(const token_list_t *tokens, priority_config_t *config)
 {
-    // TODO: Implement in next commit
-    (void)tokens;
-    (void)config;
-    return PRIORITY_E_UNSUPPORTED;
+    if (tokens == nullptr || config == nullptr) {
+        set_last_error(PRIORITY_E_NULL_POINTER, 0, nullptr,
+                      "nullptr parameter to priority_parse");
+        return PRIORITY_E_NULL_POINTER;
+    }
+
+    // Initialize configuration to defaults
+    priority_config_init(config);
+
+    // Process tokens
+    for (size_t i = 0; i < tokens->count; i++) {
+        const token_t *token = &tokens->tokens[i];
+
+        switch (token->type) {
+        case TOKEN_KEYWORD:
+            {
+                int ret = parse_base_keyword(token->start, token->length, config);
+                if (ret != PRIORITY_E_SUCCESS) {
+                    char kw[PRIORITY_MAX_TOKEN_LEN];
+                    size_t copy_len = (token->length < sizeof(kw) - 1) ?
+                                      token->length : sizeof(kw) - 1;
+                    memcpy(kw, token->start, copy_len);
+                    kw[copy_len] = '\0';
+                    set_last_error(ret, token->start - tokens->input, kw,
+                                  "Unknown or invalid keyword");
+                    return ret;
+                }
+            }
+            break;
+
+        case TOKEN_MODIFIER:
+            {
+                int ret = parse_modifier(token->start, token->length, config);
+                if (ret != PRIORITY_E_SUCCESS) {
+                    char mod[PRIORITY_MAX_TOKEN_LEN];
+                    size_t copy_len = (token->length < sizeof(mod) - 1) ?
+                                      token->length : sizeof(mod) - 1;
+                    memcpy(mod, token->start, copy_len);
+                    mod[copy_len] = '\0';
+                    set_last_error(ret, token->start - tokens->input, mod,
+                                  "Unknown or invalid modifier");
+                    return ret;
+                }
+            }
+            break;
+
+        case TOKEN_VERSION:
+            {
+                int ret = parse_version(token->start, token->length,
+                                       token->is_addition, config);
+                if (ret != PRIORITY_E_SUCCESS) {
+                    char ver[PRIORITY_MAX_TOKEN_LEN];
+                    size_t copy_len = (token->length < sizeof(ver) - 1) ?
+                                      token->length : sizeof(ver) - 1;
+                    memcpy(ver, token->start, copy_len);
+                    ver[copy_len] = '\0';
+                    set_last_error(ret, token->start - tokens->input, ver,
+                                  "Invalid TLS version specification");
+                    return ret;
+                }
+            }
+            break;
+
+        case TOKEN_CIPHER:
+        case TOKEN_KX:
+        case TOKEN_MAC:
+            {
+                int ret = parse_cipher(token->start, token->length,
+                                      token->is_addition, config);
+                if (ret != PRIORITY_E_SUCCESS) {
+                    char cipher[PRIORITY_MAX_TOKEN_LEN];
+                    size_t copy_len = (token->length < sizeof(cipher) - 1) ?
+                                      token->length : sizeof(cipher) - 1;
+                    memcpy(cipher, token->start, copy_len);
+                    cipher[copy_len] = '\0';
+                    set_last_error(ret, token->start - tokens->input, cipher,
+                                  "Invalid cipher specification");
+                    return ret;
+                }
+            }
+            break;
+
+        case TOKEN_SIGN:
+        case TOKEN_GROUP:
+            // For now, we don't process these - they're advanced features
+            // that may not have direct wolfSSL equivalents
+            break;
+
+        case TOKEN_UNKNOWN:
+        case TOKEN_OPERATOR:
+            // Operators are already processed during tokenization
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    // Validate configuration for conflicts
+    // Check if any version is both enabled and disabled
+    uint32_t conflict = config->enabled_versions & config->disabled_versions;
+    if (conflict != 0) {
+        set_last_error(PRIORITY_E_CONFLICT, 0, nullptr,
+                      "TLS version both enabled and disabled");
+        return PRIORITY_E_CONFLICT;
+    }
+
+    // If no base keyword and explicit NONE, ensure versions are explicitly set
+    if (config->explicit_none && config->enabled_versions == 0) {
+        // This is valid - user must explicitly add versions
+    }
+
+    return PRIORITY_E_SUCCESS;
 }
 
 /* ============================================================================
