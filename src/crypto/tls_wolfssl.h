@@ -80,6 +80,7 @@ struct tls_context {
     char *key_file;                        // Private key file path
     char *ca_file;                         // CA bundle file path
     char *dh_params_file;                  // DH parameters file path
+    bool has_certificate;                  // Certificate loaded flag
 
     // Priority/cipher configuration
     char *priority_string;                 // GnuTLS priority string (stored for reference)
